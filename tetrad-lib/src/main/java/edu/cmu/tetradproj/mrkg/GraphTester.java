@@ -22,7 +22,7 @@ public class GraphTester {
         try {
 
             Graph graph1 = GraphUtils.emptyGraph(0);
-            Graph graph2 = GraphUtils.emptyGraph(3);
+            Graph graph2 = GraphUtils.emptyGraph(4);
 
             List<Node> nodes = graph2.getNodes();
 
@@ -32,15 +32,14 @@ public class GraphTester {
 
             graph1.transferNodesAndEdges(graph2);
 
-            System.out.println(graph1.toString());
+            graph1.addDirectedEdge(nodes.get(2), nodes.get(3));
 
-            graph2.removeEdge(nodes.get(0), nodes.get(1));
+            Set<Edge> edges = new HashSet<>();
 
-            System.out.println(graph1.toString());
+            edges.addAll(graph2.getEdges());
+            edges.addAll(graph1.getEdges());
 
-            System.out.println(graph1 == graph2);
-
-            System.out.println(Integer.toString(SearchGraphUtils.structuralHammingDistance(graph1, graph2)));
+            System.out.println(edges);
 
 
         } catch (Exception e) {

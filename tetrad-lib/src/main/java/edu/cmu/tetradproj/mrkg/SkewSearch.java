@@ -9,7 +9,7 @@ import edu.cmu.tetrad.util.ChoiceGenerator;
 import edu.cmu.tetrad.util.RandomUtil;
 import edu.cmu.tetrad.util.StatUtils;
 import edu.cmu.tetrad.util.TetradLogger;
-import edu.cmu.tetradapp.model.GraphComparison;
+//import edu.cmu.tetradapp.model.GraphComparison;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
@@ -121,7 +121,7 @@ public class SkewSearch extends TestCase {
             String name;
             Graph graph;
             Graph skewGraph;
-            FastGes ges;
+            Fgs ges;
             Lofs2 skew;
             List<DataSet> dummyList;
             FileWriter writer;
@@ -146,7 +146,7 @@ public class SkewSearch extends TestCase {
                     dummyList = new ArrayList<>();
                     dummyList.add(data);
 
-                    ges = new FastGes(data);
+                    ges = new Fgs(data);
                     ges.setPenaltyDiscount(discount);
                     ges.setVerbose(false);
                     ges.setLog(false);
@@ -160,7 +160,7 @@ public class SkewSearch extends TestCase {
                     interpolGraphs.add(skewGraph);
                //     System.out.println(upperInterpols.get(i) + " " + Integer.toString(j) + ": " + interpolGraphs.isEmpty());
 
-                    graphFile = directories.get(i) + "/" + interpols.get(i) + "_GES_skew_3_graph_" + numbers.get(j) + ".txt";
+                    graphFile = directories.get(i) + "/" + interpols.get(i) + "_GES_skew_3_graph_" + numbers.get(j) + "_" + Integer.toString(discountInt) + ".txt";
                     writer = new FileWriter(new File(graphFile));
                     graphWriter = new BufferedWriter (writer);
 
@@ -201,6 +201,7 @@ public class SkewSearch extends TestCase {
                         interpolSHDs.add(Math.abs(SearchGraphUtils.structuralHammingDistance(graph1, graph2)));
                     }
                 }
+                System.out.println(interpolSHDs.size());
                 shdLists.add(interpolSHDs);
             }
 
@@ -216,19 +217,19 @@ public class SkewSearch extends TestCase {
                 sum = 0;
                 interpolSHDs = shdLists.get(i);
                 for (int j = 0; j < interpolSHDs.size(); j++){
-                    sum += (double)interpolSHDs.get(j);
+                    sum = sum + (double)interpolSHDs.get(j);
                 }
-                averages.add(sum/(double)interpolSHDs.size());
+                averages.add(sum/45.0);
             }
 
             for (int i = 0; i < interpols.size(); i++){
                 sum = 0;
                 interpolSHDs = shdLists.get(i);
                 for (int j = 0; j < interpolSHDs.size(); j++){
-                    diff = Math.pow((averages.get(i) - (double)interpolSHDs.get(j)), 2.0);
-                    sum += diff;
+                    diff = Math.pow(((double)interpolSHDs.get(j) - averages.get(i)), 2.0);
+                    sum = sum + diff;
                 }
-                variances.add(sum/(double)interpolSHDs.size());
+                variances.add(sum/45.0);
             }
 
             FileWriter avgWriter = new FileWriter(new File("/Users/user/Documents/FMRI/Tetrad/" + brain + "/SHD_" + Integer.toString(discountInt) + ".txt"));

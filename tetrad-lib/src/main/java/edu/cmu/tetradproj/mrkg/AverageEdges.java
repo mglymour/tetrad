@@ -57,14 +57,14 @@ public class AverageEdges {
 
                 sum = 0;
 
-                for (int j = 1; j < 101; j++) {
+                for (int j = 1; j < 11; j++) {
 
                     if (j < 10) {
-                        graphURL = graphDir + "/" + interpols.get(i) + "_graph_00" + Integer.toString(j) + "_2.txt";
+                        graphURL = graphDir + "/" + interpols.get(i) + "_GES_skew_3_graph_00" + Integer.toString(j) + "_6.txt";
                     } else if (j < 100) {
-                        graphURL = graphDir + "/" + interpols.get(i) + "_graph_0" + Integer.toString(j) + "_2.txt";
+                        graphURL = graphDir + "/" + interpols.get(i) + "_GES_skew_3_graph_0" + Integer.toString(j) + "_6.txt";
                     } else {
-                        graphURL = graphDir + "/" + interpols.get(i) + "_graph_" + Integer.toString(j) + "_2.txt";
+                        graphURL = graphDir + "/" + interpols.get(i) + "_GES_skew_3_graph_" + Integer.toString(j) + "_6.txt";
                     }
 
                     graphFile = new File(graphURL);
@@ -72,7 +72,7 @@ public class AverageEdges {
                     sum += graph.getNumEdges();
                 }
 
-                average = ((double) sum) / 100;
+                average = ((double) sum) / 10;
                 averages.add(average);
 
                 System.out.print(interpols.get(i) + ": ");
