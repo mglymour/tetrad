@@ -34,6 +34,7 @@ import java.io.ObjectInputStream;
 public final class FciIndTestParamsOld implements IndTestParams {
     static final long serialVersionUID = 23L;
 
+
     /**
      * @serial Range [0, 1].
      */
@@ -49,6 +50,8 @@ public final class FciIndTestParamsOld implements IndTestParams {
      */
     private boolean collidersOrientedLocally = false;
 
+    private int numPatternsToSave = 0;
+
     //============================CONSTRUCTORS=========================//
 
     public FciIndTestParamsOld() {
@@ -57,7 +60,6 @@ public final class FciIndTestParamsOld implements IndTestParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static FciIndTestParamsOld serializableInstance() {
@@ -79,8 +81,6 @@ public final class FciIndTestParamsOld implements IndTestParams {
 
     /**
      * Sets the depth for search algorithms that require it.
-     *
-     * @param depth
      */
     public void setDepth(int depth) {
         if (depth < -1) {
@@ -92,11 +92,14 @@ public final class FciIndTestParamsOld implements IndTestParams {
 
     /**
      * @return the depth of the search.
-     *
-     * @return depth
      */
     public int getDepth() {
         return this.depth;
+    }
+
+    @Override
+    public int getNumPatternsToSave() {
+        return getNumPatternsToSave();
     }
 
     public boolean isCollidersOrientedLocally() {
@@ -133,6 +136,10 @@ public final class FciIndTestParamsOld implements IndTestParams {
             throw new IllegalArgumentException(
                     "Depth should be >= -1: " + depth);
         }
+    }
+
+    public void setNumPatternsToSave(int numPatternsToSave) {
+        this.numPatternsToSave = numPatternsToSave;
     }
 }
 

@@ -55,6 +55,8 @@ public class LagIndTestParams implements IndTestParams {
      */
     private int numLags = 1;
 
+    private int numPatternsToSave = 0;
+
     //============================CONSTRUCTORS=========================//
 
     public LagIndTestParams() {
@@ -63,7 +65,6 @@ public class LagIndTestParams implements IndTestParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static LagIndTestParams serializableInstance() {
@@ -85,8 +86,6 @@ public class LagIndTestParams implements IndTestParams {
 
     /**
      * Sets the depth for search algorithms that require it.
-     *
-     * @param depth
      */
     public void setDepth(int depth) {
         if (depth < -1) {
@@ -164,6 +163,15 @@ public class LagIndTestParams implements IndTestParams {
             throw new IllegalArgumentException("NumLags must be in [1, " +
                     ", numTimePoints - 1]: " + numLags);
         }
+    }
+
+    @Override
+    public int getNumPatternsToSave() {
+        return numPatternsToSave;
+    }
+
+    public void setNumPatternsToSave(int numPatternsToSave) {
+        this.numPatternsToSave = numPatternsToSave;
     }
 }
 

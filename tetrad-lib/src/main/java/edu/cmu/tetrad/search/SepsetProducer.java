@@ -26,7 +26,7 @@ import edu.cmu.tetrad.graph.Node;
 import java.util.List;
 
 /**
- * Created by josephramsey on 3/23/15.
+ * @author Joseph Ramsey
  */
 public interface SepsetProducer {
     List<Node> getSepset(Node a, Node b);
@@ -37,8 +37,10 @@ public interface SepsetProducer {
 
     boolean isIndependent(Node a, Node b, List<Node> c);
 
-    double getPValue();
+    double getScore();
 
     List<Node> getVariables();
+
+    void setVerbose(boolean verbose);
 }
 

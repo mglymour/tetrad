@@ -93,11 +93,7 @@ public class ScoredGraphsWrapper implements SessionModel, GraphSource, Unmarshal
         log();
     }
 
-    public ScoredGraphsWrapper(ImagesRunner runner) {
-        this(runner.getTopGraphs().get(runner.getIndex()).getGraph(), runner.getGraphScorer());
-    }
-
-    public ScoredGraphsWrapper(GesRunner runner) {
+    public ScoredGraphsWrapper(FgsRunner runner) {
         this(runner.getTopGraphs().get(runner.getIndex()).getGraph(), runner.getGraphScorer());
     }
 
@@ -121,14 +117,9 @@ public class ScoredGraphsWrapper implements SessionModel, GraphSource, Unmarshal
         this(wrapper.getGraph(), null);
     }
 
-    public ScoredGraphsWrapper(JpcRunner wrapper) {
-        this(wrapper.getGraph(), null);
-    }
-
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static ScoredGraphsWrapper serializableInstance() {

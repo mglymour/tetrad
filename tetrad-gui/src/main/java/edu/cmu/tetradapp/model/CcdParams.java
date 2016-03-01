@@ -81,7 +81,6 @@ public final class CcdParams implements SearchParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static CcdParams serializableInstance() {
@@ -123,7 +122,7 @@ public final class CcdParams implements SearchParams {
         throw new UnsupportedOperationException();
     }
 
-    public void setIndTestParams2(IndTestParams indTestParams) {
+    public void setIndTestParams(IndTestParams indTestParams) {
         this.indTestParams = indTestParams;
     }
 
@@ -144,8 +143,6 @@ public final class CcdParams implements SearchParams {
 
     /**
      * Sets the depth of the associated PC search.
-     *
-     * @param depth
      */
     public void setDepth(int depth) {
         if (depth < -1) {

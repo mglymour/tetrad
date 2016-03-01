@@ -92,7 +92,6 @@ public final class GaParams implements SearchParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static GaParams serializableInstance() {
@@ -145,7 +144,7 @@ public final class GaParams implements SearchParams {
         return indTestParams;
     }
 
-    public void setIndTestParams2(IndTestParams indTestParams) {
+    public void setIndTestParams(IndTestParams indTestParams) {
         if (indTestParams == null) {
             throw new NullPointerException();
         }

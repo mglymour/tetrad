@@ -59,6 +59,7 @@ public final class PcIndTestParams implements IndTestParams {
      * @deprecated
      */
     private boolean collidersOrientedLocally = false;
+    private int numPatternsToSave = 0;
 
     //============================CONSTRUCTORS=========================//
 
@@ -68,7 +69,6 @@ public final class PcIndTestParams implements IndTestParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static PcIndTestParams serializableInstance() {
@@ -82,9 +82,9 @@ public final class PcIndTestParams implements IndTestParams {
     }
 
     public void setAlpha(double alpha) {
-        if (alpha < 0.0 || alpha > 1.0) {
-            throw new IllegalArgumentException("Alpha out of range: " + alpha);
-        }
+//        if (alpha < 0.0 || alpha > 1.0) {
+//            throw new IllegalArgumentException("Alpha out of range: " + alpha);
+//        }
         this.alpha = alpha;
     }
 
@@ -101,8 +101,6 @@ public final class PcIndTestParams implements IndTestParams {
 
     /**
      * Sets the depth for search algorithms that require it.
-     *
-     * @param depth
      */
     public void setDepth(int depth) {
         if (depth < -1) {
@@ -114,11 +112,14 @@ public final class PcIndTestParams implements IndTestParams {
 
     /**
      * @return the depth of the search.
-     *
-     * @return depth
      */
     public int getDepth() {
         return this.depth;
+    }
+
+    @Override
+    public int getNumPatternsToSave() {
+        return numPatternsToSave;
     }
 
     public int getBeamWidth() {
@@ -158,6 +159,10 @@ public final class PcIndTestParams implements IndTestParams {
         }
 
         if (beamWidth == 0) beamWidth = 5;
+    }
+
+    public void setNumPatternsToSave(int numPatternsToSave) {
+        this.numPatternsToSave = numPatternsToSave;
     }
 }
 

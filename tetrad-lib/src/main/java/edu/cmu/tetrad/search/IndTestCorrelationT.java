@@ -82,6 +82,7 @@ public final class IndTestCorrelationT implements IndependenceTest {
     private Map<Node, Integer> indexMap;
     private Map<String, Node> nameMap;
     private TDistribution tDistribution;
+    private boolean verbose = false;
 
     //==========================CONSTRUCTORS=============================//
 
@@ -181,8 +182,6 @@ public final class IndTestCorrelationT implements IndependenceTest {
      * @throws RuntimeException if a matrix singularity is encountered.
      */
     public boolean isIndependent(Node x, Node y, List<Node> z) {
-//        System.out.println("A");
-
         double r;
         int n = sampleSize();
 
@@ -256,16 +255,18 @@ public final class IndTestCorrelationT implements IndependenceTest {
 
         boolean independent = pValue > alpha;
 
-        if (independent) {
-            TetradLogger.getInstance().log("independencies",
-                    SearchLogUtils.independenceFactMsg(x, y, z, r)); //getPValue()));
-        } else {
-            if (pValueLogger != null) {
-                pValueLogger.println(getPValue());
-            }
+        if (verbose) {
+            if (independent) {
+                TetradLogger.getInstance().log("independencies",
+                        SearchLogUtils.independenceFactMsg(x, y, z, r)); //getScore()));
+            } else {
+                if (pValueLogger != null) {
+                    pValueLogger.println(getPValue());
+                }
 
-            TetradLogger.getInstance().log("dependencies",
-                    SearchLogUtils.dependenceFactMsg(x, y, z, getPValue()));
+                TetradLogger.getInstance().log("dependencies",
+                        SearchLogUtils.dependenceFactMsg(x, y, z, getPValue()));
+            }
         }
 
         return independent;
@@ -459,8 +460,21 @@ public final class IndTestCorrelationT implements IndependenceTest {
         return null;
     }
 
+    @Override
+    public double getScore() {
+        return getPValue();
+    }
+
     public TDistribution gettDistribution() {
         return tDistribution;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
 }
 

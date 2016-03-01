@@ -82,7 +82,6 @@ public final class PcParams implements SearchParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static PcParams serializableInstance() {
@@ -95,7 +94,7 @@ public final class PcParams implements SearchParams {
         return indTestParams;
     }
 
-    public void setIndTestParams2(IndTestParams indTestParams) {
+    public void setIndTestParams(IndTestParams indTestParams) {
         this.indTestParams = indTestParams;
     }
 

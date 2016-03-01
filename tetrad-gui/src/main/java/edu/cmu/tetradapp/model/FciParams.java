@@ -76,7 +76,6 @@ public final class FciParams implements SearchParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static FciParams serializableInstance() {
@@ -101,7 +100,7 @@ public final class FciParams implements SearchParams {
         return indTestParams;
     }
 
-    public void setIndTestParams2(IndTestParams indTestParams) {
+    public void setIndTestParams(IndTestParams indTestParams) {
         this.indTestParams = indTestParams;
     }
 

@@ -26,6 +26,9 @@ public class DeltaBICsSVM {
             String autisticStart = "/Users/user/Documents/FMRI/Tetrad/USM_Aut_Group_2/test_normal_ROI_data_spline_smooth_clean_";
             String typicalStart = "/Users/user/Documents/FMRI/Tetrad/USM_Group_2/test_normal_ROI_data_spline_smooth_clean_";
 
+            String autisticG1Start = "/Users/user/Documents/FMRI/Tetrad/USM_Aut_Both/Spline_Smooth_Clean/cerebellum_off_normal_ROI_data_spline_smooth_clean_";
+            String typicalG1Start = "/Users/user/Documents/FMRI/Tetrad/USM_Both/Spline_Smooth_Clean/cerebellum_off_normal_ROI_data_spline_smooth_clean_";
+
             List<String> numbers = new ArrayList<>();
             numbers.add("001");
             numbers.add("002");
@@ -69,27 +72,6 @@ public class DeltaBICsSVM {
                 top150Edges.add(top150Iter.next());
             }*/
 
-            Hashtable<Integer, Edge> idiot = new Hashtable<>();
-            int num = 1;
-            while (top150Iter.hasNext()){
-                idiot.put(num, top150Iter.next());
-                num++;
-            }
-
-
-            String edgeNumbering = "/Users/user/Documents/FMRI/Tetrad/USM_Group_2_Edge_Numbering.txt";
-            File edgeNumFile = new File(edgeNumbering);
-            FileWriter edgeNumWriter = new FileWriter(edgeNumFile);
-            BufferedWriter buffEdgeNumWriter = new BufferedWriter(edgeNumWriter);
-
-            for(int i = 0; i < idiot.size(); i++){
-                buffEdgeNumWriter.write(Integer.toString(i + 1) + "\t" + idiot.get(i+1).toString() + "\n");
-
-            }
-
-            buffEdgeNumWriter.flush();
-            buffEdgeNumWriter.close();
-
 
             String dataName;
             File dataFile;
@@ -110,7 +92,7 @@ public class DeltaBICsSVM {
             List<Node> edgeNodes;
             Edge undirectedEdge;
 
-            String dataset = "/Users/user/Documents/FMRI/Tetrad/USM_Group_2_Top_150_Edge_dBICs.txt";
+            String dataset = "/Users/user/Documents/FMRI/Tetrad/USM_full_dBICs_SVM.txt";
             File datasetFile = new File(dataset);
             FileWriter datasetWriter = new FileWriter(datasetFile);
             BufferedWriter buffDatasetWriter = new BufferedWriter(datasetWriter);
@@ -121,6 +103,33 @@ public class DeltaBICsSVM {
             Set<Edge> graphEdges;
 
             Edge graphEdge;
+
+            Graph interestingEdgesGraph = GraphUtils.loadGraphTxt(new File("/Users/user/Documents/FMRI/Tetrad/interesting_edges_graph.txt"));
+            Set<Edge> interestingEdges = interestingEdgesGraph.getEdges();
+            List<Edge> interestingEdgeList = new ArrayList<>();
+            Iterator<Edge> interestingIter = interestingEdges.iterator();
+
+            Hashtable<Integer, Edge> idiot = new Hashtable<>();
+            int num = 1;
+            while (interestingIter.hasNext()){
+                idiot.put(num, interestingIter.next());
+                num++;
+            }
+
+            String edgeKey = "/Users/user/Documents/FMRI/Tetrad/delta_bic_edge_key.txt";
+            File edgeKeyFile = new File(edgeKey);
+            FileWriter keyWriter = new FileWriter(edgeKeyFile);
+            BufferedWriter buffKeyWriter = new BufferedWriter(keyWriter);
+
+            for (int i = 0; i < 6; i++){
+                buffKeyWriter.write(Integer.toString(i+1) + "\t" + idiot.get(i+1).toString() + "\n");
+            }
+
+            buffKeyWriter.flush();
+            buffKeyWriter.close();
+
+            List<Node> interestingNodes = interestingEdgesGraph.getNodes();
+            Graph unGraph;
 
 
             for (int i = 0; i < 25; i++){
@@ -138,47 +147,41 @@ public class DeltaBICsSVM {
 
                 bic = fgs.scoreDag(dag);
 
-                graphEdges = dag.getEdges();
+                dag = GraphUtils.replaceNodes(dag, interestingEdgesGraph.getNodes());
 
-                edgeIterator = graphEdges.iterator();
+                unGraph = GraphUtils.undirectedGraph(dag);
 
-                graphTable = new Hashtable<>();
+                buffDatasetWriter.write("1\t");
 
-                while(edgeIterator.hasNext()){
-                    graphEdge = edgeIterator.next();
-                    edgeNodes = new ArrayList<>();
-                    edgeNodes.add(graphEdge.getNode1());
-                    edgeNodes.add(graphEdge.getNode2());
+                for (int j = 0; j < 6; j++){
 
-                    singleEdge = dag.subgraph(edgeNodes);
-                    singleEdge = GraphUtils.undirectedGraph(singleEdge);
-                    undirectedEdge = singleEdge.getEdge(graphEdge.getNode1(), graphEdge.getNode2());
+                    buffDatasetWriter.write(Integer.toString(j) + ":");
 
-                    if(top150EdgeSet.contains(undirectedEdge)){
+                    if(unGraph.containsEdge(idiot.get(j+1))){
+                        Edge interEdge = idiot.get(j+1);
+                        Node node1 = interEdge.getNode1();
+                        Node node2 = interEdge.getNode2();
+                        graphEdge = dag.getEdge(node1, node2);
 
-                        // System.out.println("We made it!");
+                        System.out.println(graphEdge.toString());
+
                         tempDAG = GraphUtils.emptyGraph(0);
                         tempDAG.transferNodesAndEdges(dag);
                         tempDAG.removeEdge(graphEdge);
 
+                        tempDAG = GraphUtils.replaceNodes(tempDAG, graph.getNodes());
+
+                        System.out.println(tempDAG.toString());
+
                         edgeBIC = fgs.scoreDag(tempDAG);
-
-                        graphTable.put(undirectedEdge, edgeBIC);
-                    }
-                }
-
-                for (int j = 0; j < 150; j++){
-                    if(graphTable.containsKey(idiot.get(j+1))){
-
-                        System.out.println("We made it!");
-                        buffDatasetWriter.write(Double.toString(bic - graphTable.get(idiot.get(j+1))) + "\t");
+                        buffDatasetWriter.write(Double.toString(bic-edgeBIC) + "\t");
                     } else {
-                        System.out.println("This sucks.");
-                        buffDatasetWriter.write(Integer.toString(0) + "\t");
+                        buffDatasetWriter.write("0\t");
                     }
+
                 }
 
-                buffDatasetWriter.write(Integer.toString(1) + "\n");
+                buffDatasetWriter.write("\n");
             }
 
             for (int i = 0; i < 19; i++){
@@ -196,42 +199,136 @@ public class DeltaBICsSVM {
 
                 bic = fgs.scoreDag(dag);
 
-                graphEdges = dag.getEdges();
+                dag = GraphUtils.replaceNodes(dag, interestingEdgesGraph.getNodes());
 
-                edgeIterator = graphEdges.iterator();
+                unGraph = GraphUtils.undirectedGraph(dag);
 
-                graphTable = new Hashtable<>();
+                buffDatasetWriter.write("0\t");
 
-                while(edgeIterator.hasNext()){
-                    graphEdge = edgeIterator.next();
-                    edgeNodes = new ArrayList<>();
-                    edgeNodes.add(graphEdge.getNode1());
-                    edgeNodes.add(graphEdge.getNode2());
+                for (int j = 0; j < 6; j++){
 
-                    singleEdge = dag.subgraph(edgeNodes);
-                    singleEdge = GraphUtils.undirectedGraph(singleEdge);
-                    undirectedEdge = singleEdge.getEdge(graphEdge.getNode1(), graphEdge.getNode2());
+                    buffDatasetWriter.write(Integer.toString(j) + ":");
 
-                    if(top150EdgeSet.contains(undirectedEdge)){
+                    if(unGraph.containsEdge(idiot.get(j+1))){
+                        Edge interEdge = idiot.get(j+1);
+                        Node node1 = interEdge.getNode1();
+                        Node node2 = interEdge.getNode2();
+                        graphEdge = dag.getEdge(node1, node2);
+
                         tempDAG = GraphUtils.emptyGraph(0);
                         tempDAG.transferNodesAndEdges(dag);
                         tempDAG.removeEdge(graphEdge);
 
+                        tempDAG = GraphUtils.replaceNodes(tempDAG, graph.getNodes());
+
                         edgeBIC = fgs.scoreDag(tempDAG);
-
-                        graphTable.put(undirectedEdge, edgeBIC);
-                    }
-                }
-
-                for (int j = 0; j < 150; j++){
-                    if(graphTable.containsKey(idiot.get(j+1))){
-                        buffDatasetWriter.write(Double.toString(bic - graphTable.get(idiot.get(j+1))) + "\t");
+                        buffDatasetWriter.write(Double.toString(bic-edgeBIC) + "\t");
                     } else {
-                        buffDatasetWriter.write(Integer.toString(0) + "\t");
+                        buffDatasetWriter.write("0\t");
                     }
+
                 }
 
-                buffDatasetWriter.write(Integer.toString(0) + "\n");
+                buffDatasetWriter.write("\n");
+            }
+
+            for (int i = 0; i < 10; i++){
+                dataName = autisticG1Start + numbers.get(i) + ".txt";
+                dataFile = new File(dataName);
+                reader = new DataReader();
+                data = reader.parseTabular(dataFile);
+                fgs = new Fgs(data);
+                fgs.setPenaltyDiscount(2.0);
+                graph = fgs.search();
+
+                pattern = new Pattern(graph);
+                dagSelect = new PatternToDag(pattern);
+                dag = dagSelect.patternToDagMeekRules();
+
+                bic = fgs.scoreDag(dag);
+
+                dag = GraphUtils.replaceNodes(dag, interestingEdgesGraph.getNodes());
+
+                unGraph = GraphUtils.undirectedGraph(dag);
+
+                buffDatasetWriter.write("1\t");
+
+                for (int j = 0; j < 6; j++){
+
+                    buffDatasetWriter.write(Integer.toString(j) + ":");
+
+                    if(unGraph.containsEdge(idiot.get(j+1))){
+                        Edge interEdge = idiot.get(j+1);
+                        Node node1 = interEdge.getNode1();
+                        Node node2 = interEdge.getNode2();
+                        graphEdge = dag.getEdge(node1, node2);
+
+                        tempDAG = GraphUtils.emptyGraph(0);
+                        tempDAG.transferNodesAndEdges(dag);
+                        tempDAG.removeEdge(graphEdge);
+
+                        tempDAG = GraphUtils.replaceNodes(tempDAG, graph.getNodes());
+
+                        edgeBIC = fgs.scoreDag(tempDAG);
+                        buffDatasetWriter.write(Double.toString(bic-edgeBIC) + "\t");
+                    } else {
+                        buffDatasetWriter.write("0\t");
+                    }
+
+                }
+
+                buffDatasetWriter.write("\n");
+
+            }
+
+            for (int i = 0; i < 10; i++){
+                dataName = typicalG1Start + numbers.get(i) + ".txt";
+                dataFile = new File(dataName);
+                reader = new DataReader();
+                data = reader.parseTabular(dataFile);
+                fgs = new Fgs(data);
+                fgs.setPenaltyDiscount(2.0);
+                graph = fgs.search();
+
+                pattern = new Pattern(graph);
+                dagSelect = new PatternToDag(pattern);
+                dag = dagSelect.patternToDagMeekRules();
+
+                bic = fgs.scoreDag(dag);
+
+
+                dag = GraphUtils.replaceNodes(dag, interestingEdgesGraph.getNodes());
+
+
+                unGraph = GraphUtils.undirectedGraph(dag);
+
+                buffDatasetWriter.write("0\t");
+
+                for (int j = 0; j < 6; j++){
+
+                    buffDatasetWriter.write(Integer.toString(j) + ":");
+
+                    if(unGraph.containsEdge(idiot.get(j+1))){
+                        Edge interEdge = idiot.get(j+1);
+                        Node node1 = interEdge.getNode1();
+                        Node node2 = interEdge.getNode2();
+                        graphEdge = dag.getEdge(node1, node2);
+
+                        tempDAG = GraphUtils.emptyGraph(0);
+                        tempDAG.transferNodesAndEdges(dag);
+                        tempDAG.removeEdge(graphEdge);
+
+                        tempDAG = GraphUtils.replaceNodes(tempDAG, graph.getNodes());
+
+                        edgeBIC = fgs.scoreDag(tempDAG);
+                        buffDatasetWriter.write(Double.toString(bic-edgeBIC) + "\t");
+                    } else {
+                        buffDatasetWriter.write("0\t");
+                    }
+
+                }
+
+                buffDatasetWriter.write("\n");
             }
 
             buffDatasetWriter.flush();
@@ -246,6 +343,6 @@ public class DeltaBICsSVM {
 
     public static void main(String...args){
         DeltaBICsSVM set = new DeltaBICsSVM();
-        set.createDataset();
+        set.createDataset();    
     }
 }

@@ -76,7 +76,6 @@ public class PurifyRunner extends AbstractMimRunner implements GraphSource, Know
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static PurifyRunner serializableInstance() {
@@ -97,12 +96,12 @@ public class PurifyRunner extends AbstractMimRunner implements GraphSource, Know
 //        if (source instanceof CovarianceMatrix) {
 //            CovarianceMatrix covMatrix = (CovarianceMatrix) source;
 //            CorrelationMatrix corrMatrix = new CorrelationMatrix(covMatrix);
-//            purify = new Purify(corrMatrix, getParams().getAlpha(),
+//            purify = new Purify(corrMatrix, getParams().getParameter1(),
 //                    getParams().getTetradTestType(), getParams().getClusters());
 //        }
 //        else if (source instanceof DataSet) {
 //            purify = new Purify((DataSet) source,
-//                    getParams().getAlpha(), getParams().getTetradTestType(),
+//                    getParams().getParameter1(), getParams().getTetradTestType(),
 //                    getParams().getClusters());
 //        }
 //        else {
@@ -137,7 +136,7 @@ public class PurifyRunner extends AbstractMimRunner implements GraphSource, Know
 
         List<List<Node>> inputPartition = ClusterUtils.clustersToPartition(getParams().getClusters(), test.getVariables());
 
-        IPurify purify = new PurifyTetradBased3(test);
+        IPurify purify = new PurifyTetradBased2(test);
 //        IPurify purify = new PurifySextadBased(sextadTest, test.getSignificance());
 //        IPurify purify = new PurifyTetradBasedH(test, 15);
 

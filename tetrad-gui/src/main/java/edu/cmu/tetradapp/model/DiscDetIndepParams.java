@@ -49,6 +49,8 @@ public final class DiscDetIndepParams implements IndTestParams {
      */
     private double discDetLb = 0.95;
 
+    private int numPatternsToSave = 0;
+
     //============================CONSTRUCTORS=========================//
 
     public DiscDetIndepParams() {
@@ -57,7 +59,6 @@ public final class DiscDetIndepParams implements IndTestParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static DiscDetIndepParams serializableInstance() {
@@ -79,8 +80,6 @@ public final class DiscDetIndepParams implements IndTestParams {
 
     /**
      * Sets the depth for search algorithms that require it.
-     *
-     * @param depth
      */
     public void setDepth(int depth) {
         if (depth < -1) {
@@ -92,8 +91,6 @@ public final class DiscDetIndepParams implements IndTestParams {
 
     /**
      * @return the depth of the search.
-     *
-     * @return depth
      */
     public int getDepth() {
         return this.depth;
@@ -133,6 +130,15 @@ public final class DiscDetIndepParams implements IndTestParams {
 
     public void setDiscDetLb(double discDetLb) {
         this.discDetLb = discDetLb;
+    }
+
+    @Override
+    public int getNumPatternsToSave() {
+        return numPatternsToSave;
+    }
+
+    public void setNumPatternsToSave(int numPatternsToSave) {
+        this.numPatternsToSave = numPatternsToSave;
     }
 }
 

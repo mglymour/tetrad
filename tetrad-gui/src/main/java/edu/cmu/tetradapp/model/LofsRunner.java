@@ -130,25 +130,13 @@ public class LofsRunner extends AbstractAlgorithmRunner implements
         this.pattern = wrapper.getGraph();
     }
 
-    public LofsRunner(JpcRunner wrapper, DataWrapper dataWrapper,
+    public LofsRunner(PcLocalRunner wrapper, DataWrapper dataWrapper,
                                PcSearchParams params, KnowledgeBoxModel knowledgeBoxModel) {
         super(dataWrapper, params, knowledgeBoxModel);
         this.pattern = wrapper.getGraph();
     }
 
-    public LofsRunner(JpcRunner wrapper, DataWrapper dataWrapper,
-                               PcSearchParams params) {
-        super(dataWrapper, params, null);
-        this.pattern = wrapper.getGraph();
-    }
-
-    public LofsRunner(JcpcRunner wrapper, DataWrapper dataWrapper,
-                               PcSearchParams params, KnowledgeBoxModel knowledgeBoxModel) {
-        super(dataWrapper, params, knowledgeBoxModel);
-        this.pattern = wrapper.getGraph();
-    }
-
-    public LofsRunner(JcpcRunner wrapper, DataWrapper dataWrapper,
+    public LofsRunner(PcLocalRunner wrapper, DataWrapper dataWrapper,
                                PcSearchParams params) {
         super(dataWrapper, params, null);
         this.pattern = wrapper.getGraph();
@@ -203,7 +191,6 @@ public class LofsRunner extends AbstractAlgorithmRunner implements
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static LingamStructureRunner serializableInstance() {

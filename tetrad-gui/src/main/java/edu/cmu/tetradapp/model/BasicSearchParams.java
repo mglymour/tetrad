@@ -84,7 +84,6 @@ public final class BasicSearchParams implements SearchParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static BasicSearchParams serializableInstance() {
@@ -112,7 +111,7 @@ public final class BasicSearchParams implements SearchParams {
         return this.indTestParams;
     }
 
-    public void setIndTestParams2(IndTestParams indTestParams) {
+    public void setIndTestParams(IndTestParams indTestParams) {
         if (indTestParams == null) {
             throw new NullPointerException();
         }

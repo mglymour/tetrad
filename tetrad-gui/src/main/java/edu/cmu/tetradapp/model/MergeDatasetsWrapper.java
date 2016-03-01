@@ -96,22 +96,17 @@ public class MergeDatasetsWrapper extends DataWrapper {
         DataModelList merged = new DataModelList();
 
         for (DataWrapper wrapper : dataWrappers) {
-            for (DataModel model : wrapper.getDataModelList()) {
-                merged.add(model);
-            }
+            merged.addAll(wrapper.getDataModelList());
         }
 
         this.setDataModel(merged);
 
         LogDataUtils.logDataModelList("Parent data in which constant columns have been removed.", getDataModelList());
-
-
     }
 
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static MergeDatasetsWrapper serializableInstance() {

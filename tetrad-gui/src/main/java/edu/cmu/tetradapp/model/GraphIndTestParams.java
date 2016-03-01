@@ -39,6 +39,7 @@ public class GraphIndTestParams implements IndTestParams {
      * @serial Range greater than or equal to -1.
      */
     private int depth = -1;
+    private int numPatternsToSave = 0;
 
     //===============================CONSTRUCTORS=========================//
 
@@ -48,7 +49,6 @@ public class GraphIndTestParams implements IndTestParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static GraphIndTestParams serializableInstance() {
@@ -83,6 +83,11 @@ public class GraphIndTestParams implements IndTestParams {
      */
     public int getDepth() {
         return this.depth;
+    }
+
+    @Override
+    public int getNumPatternsToSave() {
+        return numPatternsToSave;
     }
 
     public int getNumLags() {
@@ -126,7 +131,11 @@ public class GraphIndTestParams implements IndTestParams {
             throw new NullPointerException();
         }
     }
-}                                         
+
+    public void setNumPatternsToSave(int numPatternsToSave) {
+        this.numPatternsToSave = numPatternsToSave;
+    }
+}
 
 
 

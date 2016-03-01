@@ -62,7 +62,7 @@ class IndTestParamsEditor extends JComponent {
         this.params = params;
 
         // set up text and ties them to the parameters object being edited.
-//        alphaField = new DoubleTextField(indTestParams().getAlpha(), 5,
+//        alphaField = new DoubleTextField(indTestParams().getParameter1(), 5,
 //                NumberFormatUtil.getInstance().getNumberFormat());
         NumberFormat numberFormat = NumberFormatUtil.getInstance().getNumberFormat();
         NumberFormat smallNumberFormat = new DecimalFormat("0.0E0##");
@@ -143,8 +143,6 @@ class IndTestParamsEditor extends JComponent {
     /**
      * @return the getMappings object being edited. (This probably should not be
      * public, but it is needed so that the textfields can edit the model.)
-     *
-     * @return the stored simulation parameters model.
      */
     private IndTestParams indTestParams() {
         return params;

@@ -63,6 +63,7 @@ public final class IndTestFisherZConcatenateResiduals implements IndependenceTes
 //    private double fisherZ;
 
     private double pValue = Double.NaN;
+    private boolean verbose = false;
 
 //    private DataSet concatenatedData;
 
@@ -83,7 +84,7 @@ public final class IndTestFisherZConcatenateResiduals implements IndependenceTes
 
         setAlpha(alpha);
 
-//        this.concatenatedData = DataUtils.concatenateData(dataSets);
+//        this.concatenatedData = DataUtils.concatenate(dataSets);
 
         this.variables = dataSets.get(0).getVariables();
 
@@ -165,13 +166,15 @@ public final class IndTestFisherZConcatenateResiduals implements IndependenceTes
         this.pValue = pvalue;
         boolean independent = pvalue > alpha;
 
-        if (independent) {
-            TetradLogger.getInstance().log("independencies",
-                    SearchLogUtils.independenceFactMsg(x, y, z, getPValue()));
-            System.out.println(SearchLogUtils.independenceFactMsg(x, y, z, getPValue()));
-        } else {
-            TetradLogger.getInstance().log("dependencies",
-                    SearchLogUtils.dependenceFactMsg(x, y, z, getPValue()));
+        if (verbose) {
+            if (independent) {
+                TetradLogger.getInstance().log("independencies",
+                        SearchLogUtils.independenceFactMsg(x, y, z, getPValue()));
+                System.out.println(SearchLogUtils.independenceFactMsg(x, y, z, getPValue()));
+            } else {
+                TetradLogger.getInstance().log("dependencies",
+                        SearchLogUtils.dependenceFactMsg(x, y, z, getPValue()));
+            }
         }
 
         return independent;
@@ -313,7 +316,7 @@ public final class IndTestFisherZConcatenateResiduals implements IndependenceTes
      * @throws UnsupportedOperationException
      */
     public DataSet getData() {
-        return DataUtils.concatenateData(dataSets);
+        return DataUtils.concatenate(dataSets);
     }
 
     @Override
@@ -324,7 +327,7 @@ public final class IndTestFisherZConcatenateResiduals implements IndependenceTes
             _dataSets.add(DataUtils.standardizeData(d));
         }
 
-        return new CovarianceMatrix(DataUtils.concatenateData(_dataSets));
+        return new CovarianceMatrix(DataUtils.concatenate(_dataSets));
     }
 
     @Override
@@ -342,12 +345,25 @@ public final class IndTestFisherZConcatenateResiduals implements IndependenceTes
         return null;
     }
 
+    @Override
+    public double getScore() {
+        return getPValue();
+    }
+
 
     /**
      * @return a string representation of this test.
      */
     public String toString() {
         return "Fisher Z, Concatenating Residuals";
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
 }
 

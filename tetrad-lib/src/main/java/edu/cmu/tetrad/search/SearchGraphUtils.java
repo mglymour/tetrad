@@ -1130,8 +1130,6 @@ public final class SearchGraphUtils {
 
     /**
      * Get a graph and direct only the unshielded colliders.
-     *
-     * @return the child nodes of unshielded colliders.
      */
     public static void basicPattern(Graph graph, boolean orientInPlace) {
         Set<Edge> undirectedEdges = new HashSet<Edge>();
@@ -1505,13 +1503,12 @@ public final class SearchGraphUtils {
     }
 
     /**
-     * @param initialNodes  The nodes that reachability undirectedPaths start from.
-     * @param legalPairs    Specifies initial edges (given initial nodes) and legal edge pairs.
-     * @param c             a set of vertices (intuitively, the set of variables to be conditioned on.
-     * @param d             a set of vertices (intuitively to be used in tests of legality, for example, the set of
-     *                      ancestors of c).
-     * @param graph         the graph with respect to which reachability is
-     * @param maxPathLength
+     * @param initialNodes The nodes that reachability undirectedPaths start from.
+     * @param legalPairs   Specifies initial edges (given initial nodes) and legal edge pairs.
+     * @param c            a set of vertices (intuitively, the set of variables to be conditioned on.
+     * @param d            a set of vertices (intuitively to be used in tests of legality, for example, the set of
+     *                     ancestors of c).
+     * @param graph        the graph with respect to which reachability is
      * @return the set of nodes reachable from the given set of initial nodes in the given graph according to the
      * criteria in the given legal pairs object.
      * <p>
@@ -1816,64 +1813,60 @@ public final class SearchGraphUtils {
         }
         _depth = Math.min(_depth, _nodes.size());
 
-        while (true) {
-            for (int d = 0; d <= _depth; d++) {
-                ChoiceGenerator cg = new ChoiceGenerator(_nodes.size(), d);
-                int[] choice;
+        for (int d = 0; d <= _depth; d++) {
+            ChoiceGenerator cg = new ChoiceGenerator(_nodes.size(), d);
+            int[] choice;
 
-                while ((choice = cg.next()) != null) {
-                    List<Node> cond = GraphUtils.asList(choice, _nodes);
+            while ((choice = cg.next()) != null) {
+                List<Node> cond = GraphUtils.asList(choice, _nodes);
 
-                    if (test.isIndependent(x, z, cond)) {
-                        if (verbose) {
-                            System.out.println("Indep: " + x + " _||_ " + z + " | " + cond);
-                        }
-
-                        if (cond.contains(y)) {
-                            numSepsetsContainingY++;
-                        } else {
-                            numSepsetsNotContainingY++;
-                        }
+                if (test.isIndependent(x, z, cond)) {
+                    if (verbose) {
+                        System.out.println("Indep: " + x + " _||_ " + z + " | " + cond);
                     }
 
-                    if (numSepsetsContainingY > 0 && numSepsetsNotContainingY > 0) {
-                        return CpcTripleType.AMBIGUOUS;
+                    if (cond.contains(y)) {
+                        numSepsetsContainingY++;
+                    } else {
+                        numSepsetsNotContainingY++;
                     }
                 }
-            }
 
-            _nodes = graph.getAdjacentNodes(z);
-            _nodes.remove(x);
-            TetradLogger.getInstance().log("adjacencies", "Adjacents for " + x + "--" + y + "--" + z + " = " + _nodes);
-
-            _depth = depth;
-            if (_depth == -1) {
-                _depth = 1000;
-            }
-            _depth = Math.min(_depth, _nodes.size());
-
-            for (int d = 0; d <= _depth; d++) {
-                ChoiceGenerator cg = new ChoiceGenerator(_nodes.size(), d);
-                int[] choice;
-
-                while ((choice = cg.next()) != null) {
-                    List<Node> cond = GraphUtils.asList(choice, _nodes);
-
-                    if (test.isIndependent(x, z, cond)) {
-                        if (cond.contains(y)) {
-                            numSepsetsContainingY++;
-                        } else {
-                            numSepsetsNotContainingY++;
-                        }
-                    }
-
-                    if (numSepsetsContainingY > 0 && numSepsetsNotContainingY > 0) {
-                        return CpcTripleType.AMBIGUOUS;
-                    }
+                if (numSepsetsContainingY > 0 && numSepsetsNotContainingY > 0) {
+                    return CpcTripleType.AMBIGUOUS;
                 }
             }
+        }
 
-            break;
+        _nodes = graph.getAdjacentNodes(z);
+        _nodes.remove(x);
+        TetradLogger.getInstance().log("adjacencies", "Adjacents for " + x + "--" + y + "--" + z + " = " + _nodes);
+
+        if (_depth == -1) {
+            _depth = 1000;
+        }
+
+        _depth = Math.min(_depth, _nodes.size());
+
+        for (int d = 0; d <= _depth; d++) {
+            ChoiceGenerator cg = new ChoiceGenerator(_nodes.size(), d);
+            int[] choice;
+
+            while ((choice = cg.next()) != null) {
+                List<Node> cond = GraphUtils.asList(choice, _nodes);
+
+                if (test.isIndependent(x, z, cond)) {
+                    if (cond.contains(y)) {
+                        numSepsetsContainingY++;
+                    } else {
+                        numSepsetsNotContainingY++;
+                    }
+                }
+
+                if (numSepsetsContainingY > 0 && numSepsetsNotContainingY > 0) {
+                    return CpcTripleType.AMBIGUOUS;
+                }
+            }
         }
 
         if (numSepsetsContainingY > 0) {
@@ -2538,7 +2531,6 @@ public final class SearchGraphUtils {
 //                Node _x = graph.getNode(x.getName());
 //                Node _y = graph.getNode(y.getName());
 
-                // TODO adjust for two cycles.
                 Edge edge = trueGraph.getEdge(x, y);
                 Edge _edge = graph.getEdge(x, y);
 
@@ -2659,7 +2651,6 @@ public final class SearchGraphUtils {
 //                Node _x = graph.getNode(x.getName());
 //                Node _y = graph.getNode(y.getName());
 
-                // TODO adjust for two cycles.
                 Edge edge = trueGraph.getEdge(x, y);
                 Edge _edge = graph.getEdge(x, y);
 
@@ -2780,7 +2771,6 @@ public final class SearchGraphUtils {
 //                Node _x = graph.getNode(x.getName());
 //                Node _y = graph.getNode(y.getName());
 
-                // TODO adjust for two cycles.
                 Edge edge = trueGraph.getEdge(x, y);
                 Edge _edge = graph.getEdge(x, y);
 
@@ -3012,7 +3002,10 @@ public final class SearchGraphUtils {
     public static int[][] graphComparison(Graph estPattern, Graph truePattern, PrintStream out) {
         GraphUtils.GraphComparison comparison = getGraphComparison(estPattern, truePattern);
 
-        out.println("Adjacencies:");
+        if (out != null) {
+            out.println("Adjacencies:");
+        }
+
         int adjTp = comparison.getAdjCorrect();
         int adjFp = comparison.getAdjFp();
         int adjFn = comparison.getAdjFn();
@@ -3021,12 +3014,17 @@ public final class SearchGraphUtils {
         int arrowptFp = comparison.getArrowptFp();
         int arrowptFn = comparison.getArrowptFn();
 
-        out.println("TP " + adjTp + " FP = " + adjFp + " FN = " + adjFn);
-        out.println("Arrow Orientations:");
-        out.println("TP " + arrowptTp + " FP = " + arrowptFp + " FN = " + arrowptFn);
+        if (out != null) {
+            out.println("TP " + adjTp + " FP = " + adjFp + " FN = " + adjFn);
+            out.println("Arrow Orientations:");
+            out.println("TP " + arrowptTp + " FP = " + arrowptFp + " FN = " + arrowptFn);
+        }
 
-        int[][] counts = GraphUtils.edgeMisclassificationCounts(truePattern, estPattern, out);
-        out.println(GraphUtils.edgeMisclassifications(counts));
+        int[][] counts = GraphUtils.edgeMisclassificationCounts(truePattern, estPattern, false);
+
+        if (out != null) {
+            out.println(GraphUtils.edgeMisclassifications(counts));
+        }
 
         double adjRecall = adjTp / (double) (adjTp + adjFn);
 
@@ -3037,11 +3035,13 @@ public final class SearchGraphUtils {
 
         NumberFormat nf = new DecimalFormat("0.0");
 
-        out.println();
-        out.println("AREC\tAPRE\tOREC\tOPRE");
-        out.println(nf.format(adjRecall * 100) + "%\t" + nf.format(adjPrecision * 100)
-                + "%\t" + nf.format(arrowRecall * 100) + "%\t" + nf.format(arrowPrecision * 100) + "%");
-        out.println();
+        if (out != null) {
+            out.println();
+            out.println("AREC\tAPRE\tOREC\tOPRE");
+            out.println(nf.format(adjRecall * 100) + "%\t" + nf.format(adjPrecision * 100)
+                    + "%\t" + nf.format(arrowRecall * 100) + "%\t" + nf.format(arrowPrecision * 100) + "%");
+            out.println();
+        }
 
         return counts;
     }
@@ -3102,7 +3102,7 @@ public final class SearchGraphUtils {
                 dataSets.add((DataSet) _dataModel);
             }
 
-            FastImages images = new FastImages(dataSets);
+            Fgs images = new Fgs(new SemBicScoreImages(dataSets));
 
             images.setBoundGraph(graph);
             images.setKnowledge(knowledge);

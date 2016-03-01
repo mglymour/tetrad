@@ -471,7 +471,6 @@ public class SessionNode implements TetradSerializable {
      * the previous model class is used. If there is only one consistent model
      * class, than that model class is used. Otherwise, an exception is thrown.
      *
-     * @param simulation
      * @return true iff this node contains a model when this method completes.
      * @throws RuntimeException if the model could not be created.
      */
@@ -577,7 +576,7 @@ public class SessionNode implements TetradSerializable {
 
         if (this.model == null) {
             TetradLogger.getInstance().log("info", getDisplayName() + " was not created.");
-            throw new CouldNotCreateModelException(modelClass);
+                throw new CouldNotCreateModelException(modelClass);
         }
 
         // If we're running a simulation, try executing the model.
@@ -1044,6 +1043,12 @@ public class SessionNode implements TetradSerializable {
      * been altered.
      */
     public boolean useClonedModel() {
+
+        // turn off model canceling to allow data to be recreated from seeds.
+        if (true) {
+            return false;
+        }
+
         try {
             if (model instanceof Unmarshallable) {
                 return false;
@@ -1349,7 +1354,9 @@ public class SessionNode implements TetradSerializable {
                     e.printStackTrace();
 
                     throw new InvocationTargetException(e,
-                            "Could not construct node; root cause: " + e.getCause().getMessage());
+                            "Could not construct node; root cause: " + e.getCause().getMessage()
+                                    + " " + packagePath + " " + begin + " " + name
+                    );
                 }
 
                 this.modelParamTypes = parameterTypes;

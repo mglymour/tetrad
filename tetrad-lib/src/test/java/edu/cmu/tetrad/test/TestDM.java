@@ -24,16 +24,17 @@ package edu.cmu.tetrad.test;
 import edu.cmu.tetrad.data.BigDataSetUtility;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.graph.*;
+import edu.cmu.tetrad.search.DMSearch;
 import edu.cmu.tetrad.sem.SemIm;
 import edu.cmu.tetrad.sem.SemPm;
 import edu.cmu.tetrad.util.RandomUtil;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import edu.cmu.tetrad.search.DMSearch;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.io.*;
 import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -41,16 +42,9 @@ import java.util.List;
  *
  * @author Alexander Murray-Watters
  */
-public class TestDM extends TestCase {
+public class TestDM {
 
-    /**
-     * Standard constructor for JUnit test cases.
-     */
-    public TestDM(String name) {
-        super(name);
-    }
-
-
+    @Test
     public void test1() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -76,7 +70,7 @@ public class TestDM extends TestCase {
         search.setTrueInputs(search.getInputs());
         Graph foundGraph = search.search();
 
-        System.out.println("Test Case 1");
+        print("Test Case 1");
 //        System.out.println(search.getDmStructure());
 
 //        System.out.println(foundGraph);
@@ -95,12 +89,10 @@ public class TestDM extends TestCase {
         trueGraph.addDirectedEdge(new GraphNode("L0"), new GraphNode("X2"));
         trueGraph.addDirectedEdge(new GraphNode("L0"), new GraphNode("X3"));
 
-//        System.out.println(trueGraph);
-
         assertTrue(trueGraph.equals(foundGraph));
     }
 
-
+    @Test
     public void test2() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -138,8 +130,7 @@ public class TestDM extends TestCase {
 
         Graph foundGraph = search.search();
 
-        System.out.println("Test Case 2");
-        System.out.println(search.getDmStructure());
+        print("Test Case 2");
 
         Graph trueGraph = new EdgeListGraph();
 
@@ -173,14 +164,10 @@ public class TestDM extends TestCase {
         trueGraph.addDirectedEdge(new GraphNode("L1"), new GraphNode("X6"));
         trueGraph.addDirectedEdge(new GraphNode("L1"), new GraphNode("X7"));
 
-
-        System.out.println(foundGraph);
-        System.out.println(trueGraph);
-
         assertTrue(foundGraph.equals(trueGraph));
     }
 
-
+    @Test
     public void test3() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -235,9 +222,7 @@ public class TestDM extends TestCase {
         search.setTrueInputs(search.getInputs());
         Graph foundGraph = search.search();
 
-        System.out.println("Test Case 3");
-        System.out.println(search.getDmStructure());
-
+        print("Test Case 3");
 
         Graph trueGraph = new EdgeListGraph();
 
@@ -291,6 +276,7 @@ public class TestDM extends TestCase {
 
 
     //Three latent fork case
+    @Test
     public void test4() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -318,9 +304,7 @@ public class TestDM extends TestCase {
         search.setTrueInputs(search.getInputs());
         Graph foundGraph = search.search();
 
-        System.out.println("Three Latent Fork Case");
-        System.out.println(search.getDmStructure());
-
+        print("Three Latent Fork Case");
 
         Graph trueGraph = new EdgeListGraph();
 
@@ -353,6 +337,7 @@ public class TestDM extends TestCase {
     }
 
     // Three latent collider case
+    @Test
     public void test5() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -380,8 +365,7 @@ public class TestDM extends TestCase {
         search.setTrueInputs(search.getInputs());
         Graph foundGraph = search.search();
 
-        System.out.println("Three Latent Collider Case");
-        System.out.println(search.getDmStructure());
+        print("Three Latent Collider Case");
 
         Graph trueGraph = new EdgeListGraph();
 
@@ -411,6 +395,7 @@ public class TestDM extends TestCase {
     }
 
     //Four latent case.
+    @Test
     public void test6() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -434,7 +419,7 @@ public class TestDM extends TestCase {
         SemPm pm = new SemPm(graph);
         SemIm im = new SemIm(pm);
 
-        DataSet data = im.simulateData(1000000, false);
+        DataSet data = im.simulateData(1000, false);
 
         DMSearch search = new DMSearch();
 
@@ -445,13 +430,8 @@ public class TestDM extends TestCase {
         search.setTrueInputs(search.getInputs());
         Graph foundGraph = search.search();
 
-        System.out.println("Four Latent Case");
-        System.out.println(search.getDmStructure());
-
-
-        System.out.println("search.getDmStructure().latentStructToEdgeListGraph(search.getDmStructure())");
-        System.out.println(search.getDmStructure().latentStructToEdgeListGraph(search.getDmStructure()));
-
+        print("Four Latent Case");
+        print("search.getDmStructure().latentStructToEdgeListGraph(search.getDmStructure())");
 
         Graph trueGraph = new EdgeListGraph();
 
@@ -496,10 +476,10 @@ public class TestDM extends TestCase {
 
 //    Test cases after here serve as examples and/or were used to diagnose a no longer applicable problem.
 //    Still have to clean up.
-
+    @Ignore
     public void rtest7() {
 
-        System.out.println("test 7");
+        print("test 7");
         DMSearch result =
                 readAndSearchData("src/edu/cmu/tetradproj/amurrayw/testcase7.txt",
                         new int[]{0, 1}, new int[]{2, 3}, true, new int[]{0, 1});
@@ -512,16 +492,14 @@ public class TestDM extends TestCase {
             outStream.println(result.getDmStructure().latentStructToEdgeListGraph(result.getDmStructure()));
             outStream.println();
         } catch (java.io.FileNotFoundException e) {
-            System.out.println("Can't write to file.");
+            print("Can't write to file.");
 
         }
 
-
-        System.out.println(result.getDmStructure().latentStructToEdgeListGraph(result.getDmStructure()));
-        System.out.println("DONE");
+        print("DONE");
     }
 
-
+    @Test
     public void test8() {
 //
 //        int nInputs=17610;
@@ -565,11 +543,12 @@ public class TestDM extends TestCase {
 //        System.out.println("DONE");
     }
 
-
+    @Ignore
     public void rtest9() {
         internaltest9(10);
     }
 
+    @Ignore
     public int internaltest9(double initialDiscount) {
 
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -588,7 +567,7 @@ public class TestDM extends TestCase {
             outputs[i] = nInputs + i - 1;
         }
 
-        System.out.println("test 9");
+        print("test 9");
 
 //Trying recursion as while loop seems to reduce speed below that of non-loop version.
         //double initialDiscount = 20;
@@ -604,7 +583,7 @@ public class TestDM extends TestCase {
                         inputs, outputs, true, inputs);
 
 
-        System.out.println("Finished search, now writing output to file.");
+        print("Finished search, now writing output to file.");
 
 
         File file = new File("src/edu/cmu/tetradproj/amurrayw/final_output_" + initialDiscount + "_.txt");
@@ -614,7 +593,7 @@ public class TestDM extends TestCase {
             outStream.println(result.getDmStructure().latentStructToEdgeListGraph(result.getDmStructure()));
             //outStream.println();
         } catch (java.io.FileNotFoundException e) {
-            System.out.println("Can't write to file.");
+            print("Can't write to file.");
 
         }
 
@@ -626,14 +605,14 @@ public class TestDM extends TestCase {
             outStream.println(result.getDmStructure());
             //outStream.println();
         } catch (java.io.FileNotFoundException e) {
-            System.out.println("Can't write to file.");
+            print("Can't write to file.");
 
         }
 //            initialDiscount--;
 //        }
 
         //System.out.println(result.getDmStructure().latentStructToEdgeListGraph(result.getDmStructure()));
-        System.out.println("DONE");
+        print("DONE");
 
 //        if(initialDiscount>1){
 //            result=null;
@@ -645,7 +624,7 @@ public class TestDM extends TestCase {
 
 
 //
-
+    @Test
     public void test10() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -667,7 +646,7 @@ public class TestDM extends TestCase {
 
         DMSearch search = new DMSearch();
 
-        search.setUseGES(false);
+        search.setUseFgs(false);
 
         search.setInputs(new int[]{0, 1});
         search.setOutputs(new int[]{2, 3, 4});
@@ -676,8 +655,12 @@ public class TestDM extends TestCase {
         search.setTrueInputs(search.getInputs());
         search.search();
 
-        System.out.println("Test Case 10");
-        System.out.println(search.getDmStructure());
+        print("Test Case 10");
+
+        // Trying to quiet the output for unit tests.
+        if (false) {
+            System.out.println(search.getDmStructure());
+        }
 
 
         assertTrue(true);
@@ -707,7 +690,7 @@ public class TestDM extends TestCase {
                 path.add(node);
                 currentNode = node;
 
-                System.out.println("RAN: " + adjacentNodes + " " + path + " " + currentNode);
+                print("RAN: " + adjacentNodes + " " + path + " " + currentNode);
 
                 return (cycleExists(graph, adjacentNodes, path, currentNode));
             }
@@ -729,7 +712,7 @@ public class TestDM extends TestCase {
         return (false);
     }
 
-
+    @Ignore
     public void rtest11() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -751,21 +734,21 @@ public class TestDM extends TestCase {
         System.out.print(graph.existsDirectedPathFromTo(X3, X0));
 
         for (Node node : graph.getNodes()) {
-            System.out.println("Nodes adjacent to " + node + ": " + graph.getAdjacentNodes(node) + "\n");
+            print("Nodes adjacent to " + node + ": " + graph.getAdjacentNodes(node) + "\n");
         }
 
 
-        System.out.println("graph.existsDirectedCycle: " + graph.existsDirectedCycle());
+        print("graph.existsDirectedCycle: " + graph.existsDirectedCycle());
 
 
-        System.out.println("Graph structure: " + graph);
+        print("Graph structure: " + graph);
 
 
         assertTrue(true);
 
     }
 
-
+    @Ignore
     public void rtest12() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -825,21 +808,21 @@ public class TestDM extends TestCase {
         search.setTrueInputs(search.getInputs());
         search.search();
 
-        System.out.println("");
-        System.out.println("" + search.getDmStructure());
+        print("");
+        print("" + search.getDmStructure());
 
 
-        System.out.println("graph.existsDirectedCycle: " + search.getDmStructure().latentStructToEdgeListGraph(search.getDmStructure()).existsDirectedCycle());
+        print("graph.existsDirectedCycle: " + search.getDmStructure().latentStructToEdgeListGraph(search.getDmStructure()).existsDirectedCycle());
 
 
-        System.out.println("Graph structure: " + search);
+        print("Graph structure: " + search);
 
 
         assertTrue(true);
 
     }
 
-
+    @Ignore
     public void rtest13() {
         //setting seed for debug.
         RandomUtil.getInstance().setSeed(29483818483L);
@@ -919,23 +902,24 @@ public class TestDM extends TestCase {
         search.setTrueInputs(search.getInputs());
         search.search();
 
-        System.out.println("");
-        System.out.println("" + search.getDmStructure());
+        print("");
+        print("" + search.getDmStructure());
 
 
-        System.out.println("graph.existsDirectedCycle: " + search.getDmStructure().latentStructToEdgeListGraph(search.getDmStructure()).existsDirectedCycle());
+        print("graph.existsDirectedCycle: " + search.getDmStructure().latentStructToEdgeListGraph(search.getDmStructure()).existsDirectedCycle());
 
 
-        System.out.println("Graph structure: " + search);
+        print("Graph structure: " + search);
 
 
         assertTrue(true);
 
     }
 
+    @Ignore
     public void rtest16() {
 
-        System.out.println("test PC");
+        print("test PC");
         DMSearch result =
                 readAndSearchData("src/edu/cmu/tetradproj/amurrayw/testcase7_fixed.txt",
                         new int[]{0, 1}, new int[]{2, 3}, false, new int[]{0, 1});
@@ -948,25 +932,22 @@ public class TestDM extends TestCase {
             outStream.println(result.getDmStructure().latentStructToEdgeListGraph(result.getDmStructure()));
             outStream.println();
         } catch (java.io.FileNotFoundException e) {
-            System.out.println("Can't write to file.");
+            print("Can't write to file.");
 
         }
 
 
         System.out.println(result.getDmStructure().latentStructToEdgeListGraph(result.getDmStructure()));
-        System.out.println("DONE");
+        print("DONE");
     }
 
-
+    @Ignore
     public void rtest17() {
         internaltest17(999);
     }
 
+    @Ignore
     public int internaltest17(double initialDiscount) {
-
-
-        //TODO: to fix input files, need to run following sed: sed -i  's/[[:space:]]\+/ /g'
-
         RandomUtil.getInstance().setSeed(29483818483L);
 
 
@@ -990,7 +971,7 @@ public class TestDM extends TestCase {
             outputs[i] = nInputs + i - 1;
         }
 
-        System.out.println("test 17");
+        print("test 17");
 
 //Trying recursion as while loop seems to reduce speed below that of non-loop version.
         //double initialDiscount = 20;
@@ -1011,7 +992,7 @@ public class TestDM extends TestCase {
                         inputs, outputs, false, trueInputs);
 
 
-        System.out.println("Finished search, now writing output to file.");
+        print("Finished search, now writing output to file.");
 
 
         File file = new File("src/edu/cmu/tetradproj/amurrayw/final_output_" + initialDiscount + "_.txt");
@@ -1021,7 +1002,7 @@ public class TestDM extends TestCase {
             outStream.println(result.getDmStructure().latentStructToEdgeListGraph(result.getDmStructure()));
             //outStream.println();
         } catch (java.io.FileNotFoundException e) {
-            System.out.println("Can't write to file.");
+            print("Can't write to file.");
 
         }
 
@@ -1033,14 +1014,14 @@ public class TestDM extends TestCase {
             outStream.println(result.getDmStructure());
             //outStream.println();
         } catch (java.io.FileNotFoundException e) {
-            System.out.println("Can't write to file.");
+            print("Can't write to file.");
 
         }
 //            initialDiscount--;
 //        }
 
         //System.out.println(result.getDmStructure().latentStructToEdgeListGraph(result.getDmStructure()));
-        System.out.println("DONE");
+        print("DONE");
 
 //        if(initialDiscount>1){
 //            result=null;
@@ -1050,7 +1031,7 @@ public class TestDM extends TestCase {
         return (1);
     }
 
-
+    @Ignore
     public void rtest14() {
         //setting seed for debug.
 //        RandomUtil.getInstance().setSeed(29483818483L);
@@ -1084,7 +1065,7 @@ public class TestDM extends TestCase {
 
     }
 
-
+    @Ignore
     public void rtest15() {
 //        for(int i=10; i>=4; i--){
 //            finishRenaming(i);
@@ -1131,9 +1112,9 @@ public class TestDM extends TestCase {
                     for (int i = 0; i < nVar; i++) {
                         ;
                         if (Integer.parseInt(adjInfoString[i]) > 1) {
-                            System.out.println(adjInfoString[i]);
+                            print(adjInfoString[i]);
                         } else if (Integer.parseInt(adjInfoString[i]) < 0) {
-                            System.out.println(adjInfoString[i]);
+                            print(adjInfoString[i]);
                         }
 
 
@@ -1178,7 +1159,8 @@ public class TestDM extends TestCase {
                 outStream.println(graph);
                 //outStream.println();
             } catch (java.io.FileNotFoundException e) {
-                System.out.println("Can't write to file.");
+                String x = "Can't write to file.";
+                print(x);
 
             }
 
@@ -1187,6 +1169,12 @@ public class TestDM extends TestCase {
             e.printStackTrace();
         }
 
+    }
+
+    private void print(String x) {
+        if (false) {
+            System.out.println(x);
+        }
     }
 
     //Reads in data and runs search. Note: Assumes variable names are of the form X0, X1, etc.
@@ -1199,12 +1187,12 @@ public class TestDM extends TestCase {
             data = BigDataSetUtility.readInContinuousData(file, ' ');
 
         } catch (IOException e) {
-            System.out.println("Failed to read in data.");
+            print("Failed to read in data.");
             e.printStackTrace();
         }
 
 
-        System.out.println("Read Data");
+        print("Read Data");
         DMSearch search = new DMSearch();
 
         search.setInputs(inputs);
@@ -1213,7 +1201,7 @@ public class TestDM extends TestCase {
         if (useGES == false) {
 
             search.setAlphaPC(.05);
-            search.setUseGES(useGES);
+            search.setUseFgs(useGES);
 
             search.setData(data);
             search.setTrueInputs(trueInputs);
@@ -1232,20 +1220,8 @@ public class TestDM extends TestCase {
 
     }
 
-
-    /**
-     * This method uses reflection to collect up all of the test methods from this class and return them to the test
-     * runner.
-     */
-    public static Test suite() {
-
-        // Edit the name of the class in the parens to match the name
-        // of this class.
-        return new TestSuite(TestDM.class);
-    }
-
     public static void main(String... args) {
-        new TestDM("Foo").test8();
+        new TestDM().test8();
     }
 }
 

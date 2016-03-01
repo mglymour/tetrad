@@ -32,6 +32,7 @@ public class SepsetsSet implements SepsetProducer {
     private final SepsetMap sepsets;
     private final IndependenceTest test;
     private double p;
+    private boolean verbose = false;
 
     public SepsetsSet(SepsetMap sepsets, IndependenceTest test) {
         this.sepsets = sepsets;
@@ -61,13 +62,22 @@ public class SepsetsSet implements SepsetProducer {
     }
 
     @Override
-    public double getPValue() {
+    public double getScore() {
         return test.getPValue();
     }
 
     @Override
     public List<Node> getVariables() {
         return test.getVariables();
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    @Override
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
 }
 

@@ -58,7 +58,6 @@ public class PdpStructureRunner extends AbstractAlgorithmRunner implements Graph
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static PdpStructureRunner serializableInstance() {
@@ -88,7 +87,7 @@ public class PdpStructureRunner extends AbstractAlgorithmRunner implements Graph
 
 //        Lingam_old lingam = new Lingam_old();
 //        lingam.setPruningDone(true);
-//        lingam.setAlpha(getParams().getIndTestParams().getAlpha());
+//        lingam.setParameter1(getParams().getIndTestParams().getParameter1());
 //        GraphWithParameters result = lingam.lingam(data);
 //        Graph graph = result.getGraph();
 

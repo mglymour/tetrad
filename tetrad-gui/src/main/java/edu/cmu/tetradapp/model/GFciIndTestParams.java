@@ -66,6 +66,7 @@ public class GFciIndTestParams implements IndTestParams {
      */
     private int maxReachablePathLength = -1;
     private boolean faithfulnessAssumed = false;
+    private int numPatternsToSave = 0;
 
     //============================CONSTRUCTORS=========================//
 
@@ -75,7 +76,6 @@ public class GFciIndTestParams implements IndTestParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static GFciIndTestParams serializableInstance() {
@@ -97,8 +97,6 @@ public class GFciIndTestParams implements IndTestParams {
 
     /**
      * Sets the depth for search algorithms that require it.
-     *
-     * @param depth
      */
     public void setDepth(int depth) {
         if (depth < -1) {
@@ -110,11 +108,14 @@ public class GFciIndTestParams implements IndTestParams {
 
     /**
      * @return the depth of the search.
-     *
-     * @return depth
      */
     public int getDepth() {
         return this.depth;
+    }
+
+    @Override
+    public int getNumPatternsToSave() {
+        return numPatternsToSave;
     }
 
     public boolean isCompleteRuleSetUsed() {
@@ -212,6 +213,10 @@ public class GFciIndTestParams implements IndTestParams {
         }
 
         this.structurePrior = structurePrior;
+    }
+
+    public void setNumPatternsToSave(int numPatternsToSave) {
+        this.numPatternsToSave = numPatternsToSave;
     }
 }
 

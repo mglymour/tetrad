@@ -96,8 +96,11 @@ public final class IndTestFisherZ implements IndependenceTest {
             throw new IllegalArgumentException("Data set must be continuous.");
         }
 
+        if (!(alpha >= 0 && alpha <= 1)) {
+            throw new IllegalArgumentException("Alpha mut be in [0, 1]");
+        }
+
         this.covMatrix = new CovarianceMatrixOnTheFly(dataSet);
-//        this._covMatrix = covMatrix.getMatrix();
         List<Node> nodes = covMatrix.getVariables();
 
         this.variables = Collections.unmodifiableList(nodes);
@@ -105,7 +108,7 @@ public final class IndTestFisherZ implements IndependenceTest {
         this.nameMap = nameMap(variables);
         setAlpha(alpha);
 
-        this.dataSet = DataUtils.center(dataSet);
+        this.dataSet = dataSet;
     }
 
     /**
@@ -117,7 +120,6 @@ public final class IndTestFisherZ implements IndependenceTest {
      */
     public IndTestFisherZ(TetradMatrix data, List<Node> variables, double alpha) {
         this.dataSet = ColtDataSet.makeContinuousData(variables, data);
-        this.dataSet = DataUtils.center(dataSet);
         this.covMatrix = new CovarianceMatrix(dataSet);
         this.variables = Collections.unmodifiableList(variables);
         this.indexMap = indexMap(variables);
@@ -427,6 +429,11 @@ public final class IndTestFisherZ implements IndependenceTest {
     @Override
     public List<TetradMatrix> getCovMatrices() {
         return null;
+    }
+
+    @Override
+    public double getScore() {
+        return getPValue();
     }
 
     public boolean isVerbose() {

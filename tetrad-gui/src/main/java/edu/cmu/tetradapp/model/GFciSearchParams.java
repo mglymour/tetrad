@@ -80,7 +80,6 @@ public final class GFciSearchParams implements SearchParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static GFciSearchParams serializableInstance() {
@@ -108,7 +107,7 @@ public final class GFciSearchParams implements SearchParams {
         return this.indTestParams2;
     }
 
-    public void setIndTestParams2(IndTestParams indTestParams2) {
+    public void setIndTestParams(IndTestParams indTestParams2) {
         if (indTestParams2 == null) {
             throw new NullPointerException();
         }

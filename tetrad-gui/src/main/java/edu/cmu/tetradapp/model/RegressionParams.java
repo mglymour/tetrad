@@ -76,7 +76,6 @@ public final class RegressionParams implements StandardRegressionParams {
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static RegressionParams serializableInstance() {
@@ -116,7 +115,7 @@ public final class RegressionParams implements StandardRegressionParams {
         throw new UnsupportedOperationException();
     }
 
-    public void setIndTestParams2(IndTestParams indTestParams) {
+    public void setIndTestParams(IndTestParams indTestParams) {
         //Ignore.
     }
 

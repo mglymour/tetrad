@@ -51,6 +51,7 @@ public final class IndTestFisherZFisherPValue implements IndependenceTest {
     private List<DataSet> allLagged;
 
     private List<IndependenceTest> tests = new ArrayList<IndependenceTest>();
+    private boolean verbose = false;
 
     //==========================CONSTRUCTORS=============================//
 
@@ -144,13 +145,15 @@ public final class IndTestFisherZFisherPValue implements IndependenceTest {
 
         boolean independent = p > alpha;
 
-        if (independent) {
-            TetradLogger.getInstance().log("independencies",
-                    SearchLogUtils.independenceFactMsg(x, y, z, getPValue()));
-            System.out.println(SearchLogUtils.independenceFactMsg(x, y, z, getPValue()));
-        } else {
-            TetradLogger.getInstance().log("dependencies",
-                    SearchLogUtils.dependenceFactMsg(x, y, z, getPValue()));
+        if (verbose) {
+            if (independent) {
+                TetradLogger.getInstance().log("independencies",
+                        SearchLogUtils.independenceFactMsg(x, y, z, getPValue()));
+                System.out.println(SearchLogUtils.independenceFactMsg(x, y, z, getPValue()));
+            } else {
+                TetradLogger.getInstance().log("dependencies",
+                        SearchLogUtils.dependenceFactMsg(x, y, z, getPValue()));
+            }
         }
 
         return independent;
@@ -272,7 +275,7 @@ public final class IndTestFisherZFisherPValue implements IndependenceTest {
             _dataSets.add(DataUtils.standardizeData(d));
         }
 
-        return new CovarianceMatrix(DataUtils.concatenateData(_dataSets));
+        return new CovarianceMatrix(DataUtils.concatenate(_dataSets));
     }
 
     @Override
@@ -288,6 +291,11 @@ public final class IndTestFisherZFisherPValue implements IndependenceTest {
     @Override
     public List<TetradMatrix> getCovMatrices() {
         return null;
+    }
+
+    @Override
+    public double getScore() {
+        return getPValue();
     }
 
     /**
@@ -308,6 +316,14 @@ public final class IndTestFisherZFisherPValue implements IndependenceTest {
     public void setPercent(double percent) {
         if (percent < 0.0 || percent > 1.0) throw new IllegalArgumentException();
         this.percent = percent;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
 }
 

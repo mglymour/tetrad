@@ -23,17 +23,17 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Node;
-import edu.cmu.tetrad.util.ProbUtils;
+import org.apache.commons.math3.special.Gamma;
+import org.apache.commons.math3.util.FastMath;
 
 import java.util.List;
 
 /**
  * Calculates the BDeu score.
  */
-public class BDeuScore implements LocalDiscreteScore, GesScore {
+public class BDeuScore implements LocalDiscreteScore, IBDeuScore {
     private List<Node> variables;
     private int[][] data;
-    //    private final LocalScoreCache localScoreCache = new LocalScoreCache();
     private int sampleSize;
 
     private double samplePrior = 1;
@@ -41,7 +41,7 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
 
     private int[] numCategories;
 
-    private double lastBumpThreshold = 0.0;
+//    private double lastBumpThreshold = 0.0;
 
     public BDeuScore(DataSet dataSet) {
         if (dataSet == null) {
@@ -141,30 +141,40 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         //Finally, compute the score
         double score = 0.0;
 
-        score += (r - 1) * q * Math.log(getStructurePrior());
+        score += r * q * FastMath.log(getStructurePrior());
+//
+//        score += getPriorForStructure(parents.length);
 
         final double cellPrior = getSamplePrior() / (r * q);
         final double rowPrior = getSamplePrior() / q;
 
         for (int j = 0; j < q; j++) {
-            score -= ProbUtils.lngamma(rowPrior + n_j[j]);
+            score -= Gamma.logGamma(rowPrior + n_j[j]);
 
             for (int k = 0; k < r; k++) {
-                score += ProbUtils.lngamma(cellPrior + n_jk[j][k]);
+                score += Gamma.logGamma(cellPrior + n_jk[j][k]);
             }
         }
 
-        score += q * ProbUtils.lngamma(rowPrior);
-        score -= r * q * ProbUtils.lngamma(cellPrior);
+        score += q * Gamma.logGamma(rowPrior);
+        score -= r * q * Gamma.logGamma(cellPrior);
 
-        lastBumpThreshold = ((r - 1) * q * Math.log(getStructurePrior()));
+//        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
 
         return score;
     }
 
+    // Greg's structure prior
+    private double getPriorForStructure(int numParents) {
+        double e = getStructurePrior();
+        double k = numParents;
+        double n = data.length;
+        return k * Math.log(e / n) + (n - k) * Math.log(1.0 - (e / n));
+    }
+
     @Override
-    public double localScoreDiff(int i, int[] parents, int extra) {
-        return localScore(i, append(parents, extra)) - localScore(i, parents);
+    public double localScoreDiff(int x, int y, int[] z) {
+        return localScore(y, append(z, x)) - localScore(y, z);
     }
 
     int[] append(int[] parents, int extra) {
@@ -200,23 +210,25 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         //Finally, compute the score
         double score = 0.0;
 
-        score += (r - 1) * q * Math.log(getStructurePrior());
+//        score += (r) * q * FastMath.log(getStructurePrior());
+
+        score += getPriorForStructure(1);
 
         final double cellPrior = getSamplePrior() / (r * q);
         final double rowPrior = getSamplePrior() / q;
 
         for (int j = 0; j < q; j++) {
-            score -= ProbUtils.lngamma(rowPrior + n_j[j]);
+            score -= Gamma.logGamma(rowPrior + n_j[j]);
 
             for (int k = 0; k < r; k++) {
-                score += ProbUtils.lngamma(cellPrior + n_jk[j][k]);
+                score += Gamma.logGamma(cellPrior + n_jk[j][k]);
             }
         }
 
-        score += q * ProbUtils.lngamma(rowPrior);
-        score -= r * q * ProbUtils.lngamma(cellPrior);
+        score += q * Gamma.logGamma(rowPrior);
+        score -= r * q * Gamma.logGamma(cellPrior);
 
-        lastBumpThreshold = ((r - 1) * q * Math.log(getStructurePrior()));
+//        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
 
         return score;
     }
@@ -242,21 +254,23 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         //Finally, compute the score
         double score = 0.0;
 
-        score += (r - 1) * Math.log(getStructurePrior());
+//        score += (r) * q * FastMath.log(getStructurePrior());
+
+        score += getPriorForStructure(0);
 
         final double cellPrior = getSamplePrior() / r;
         final double rowPrior = getSamplePrior();
 
-        score -= ProbUtils.lngamma(rowPrior + n_j);
+        score -= Gamma.logGamma(rowPrior + n_j);
 
         for (int k = 0; k < r; k++) {
-            score += ProbUtils.lngamma(cellPrior + n_jk[k]);
+            score += Gamma.logGamma(cellPrior + n_jk[k]);
         }
 
-        score += ProbUtils.lngamma(rowPrior);
-        score -= r * ProbUtils.lngamma(cellPrior);
+        score += Gamma.logGamma(rowPrior);
+        score -= r * Gamma.logGamma(cellPrior);
 
-        lastBumpThreshold = ((r - 1) * Math.log(getStructurePrior()));
+//        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
 
         return score;
     }
@@ -266,22 +280,30 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         return this.variables;
     }
 
-    @Override
     public int getSampleSize() {
         return sampleSize;
     }
 
-    @Override
     /**
      * Must be called directly after the corresponding scoring call.
      */
     public boolean isEffectEdge(double bump) {
-        return bump > lastBumpThreshold;
+        return bump > 0;//lastBumpThreshold;
     }
 
     @Override
     public boolean isDiscrete() {
         return true;
+    }
+
+    @Override
+    public double getParameter1() {
+        return 0;
+    }
+
+    @Override
+    public void setParameter1(double alpha) {
+
     }
 
     @Override
@@ -298,20 +320,35 @@ public class BDeuScore implements LocalDiscreteScore, GesScore {
         return rowIndex;
     }
 
+    @Override
     public double getStructurePrior() {
         return structurePrior;
     }
 
+    @Override
     public double getSamplePrior() {
         return samplePrior;
     }
 
+    @Override
     public void setStructurePrior(double structurePrior) {
         this.structurePrior = structurePrior;
     }
 
+    @Override
     public void setSamplePrior(double samplePrior) {
         this.samplePrior = samplePrior;
+    }
+
+    public void setVariables(List<Node> variables) {
+        for (int i = 0; i < variables.size(); i++) {
+            if (!variables.get(i).getName().equals(this.variables.get(i).getName())) {
+                throw new IllegalArgumentException("Variable in index " + (i + 1) + " does not have the same name " +
+                        "as the variable being substituted for it.");
+            }
+        }
+
+        this.variables = variables;
     }
 }
 

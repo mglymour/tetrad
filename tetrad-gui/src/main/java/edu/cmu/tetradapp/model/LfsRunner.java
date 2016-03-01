@@ -104,25 +104,13 @@ public class LfsRunner extends AbstractAlgorithmRunner implements
         this.pattern = wrapper.getGraph();
     }
 
-    public LfsRunner(JpcRunner wrapper, DataWrapper dataWrapper,
+    public LfsRunner(PcLocalRunner wrapper, DataWrapper dataWrapper,
                                PcSearchParams params, KnowledgeBoxModel knowledgeBoxModel) {
         super(dataWrapper, params, knowledgeBoxModel);
         this.pattern = wrapper.getGraph();
     }
 
-    public LfsRunner(JpcRunner wrapper, DataWrapper dataWrapper,
-                               PcSearchParams params) {
-        super(dataWrapper, params, null);
-        this.pattern = wrapper.getGraph();
-    }
-
-    public LfsRunner(JcpcRunner wrapper, DataWrapper dataWrapper,
-                               PcSearchParams params, KnowledgeBoxModel knowledgeBoxModel) {
-        super(dataWrapper, params, knowledgeBoxModel);
-        this.pattern = wrapper.getGraph();
-    }
-
-    public LfsRunner(JcpcRunner wrapper, DataWrapper dataWrapper,
+    public LfsRunner(PcLocalRunner wrapper, DataWrapper dataWrapper,
                                PcSearchParams params) {
         super(dataWrapper, params, null);
         this.pattern = wrapper.getGraph();
@@ -155,7 +143,6 @@ public class LfsRunner extends AbstractAlgorithmRunner implements
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static LingamStructureRunner serializableInstance() {

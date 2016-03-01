@@ -76,7 +76,6 @@ public final class LogisticRegressionParams implements StandardRegressionParams 
     /**
      * Generates a simple exemplar of this class to test serialization.
      *
-     * @see edu.cmu.TestSerialization
      * @see TetradSerializableUtils
      */
     public static LogisticRegressionParams serializableInstance() {
@@ -117,7 +116,7 @@ public final class LogisticRegressionParams implements StandardRegressionParams 
         throw new UnsupportedOperationException();
     }
 
-    public void setIndTestParams2(IndTestParams indTestParams) {
+    public void setIndTestParams(IndTestParams indTestParams) {
         //Ignore.
     }
 
