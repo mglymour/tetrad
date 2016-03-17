@@ -2264,74 +2264,83 @@ public final class GraphUtils {
 
     public static Graph loadGraphTxt(File file) {
         try {
-            BufferedReader in = new BufferedReader(new FileReader(file));
-
-            while (!in.readLine().trim().equals("Graph Nodes:")) ;
-
-            String line;
-            Graph graph = new EdgeListGraph();
-
-            while (!(line = in.readLine().trim()).equals("")) {
-                String[] tokens = line.split(" ");
-
-                for (String token : tokens) {
-                    graph.addNode(new GraphNode(token));
-                }
-            }
-
-            while (!in.readLine().trim().equals("Graph Edges:")) ;
-
-            while ((line = in.readLine()) != null) {
-                line = line.trim();
-                if (line.equals("")) break;
-//                System.out.println(line);
-
-                String[] tokens = line.split(" ");
-
-                String from = tokens[1];
-                String edge = tokens[2];
-                String to = tokens[3];
-
-                Node _from = graph.getNode(from);
-                Node _to = graph.getNode(to);
-
-                char end1 = edge.charAt(0);
-                char end2 = edge.charAt(2);
-
-                Endpoint _end1, _end2;
-
-                if (end1 == '<') {
-                    _end1 = Endpoint.ARROW;
-                } else if (end1 == 'o') {
-                    _end1 = Endpoint.CIRCLE;
-                } else if (end1 == '-') {
-                    _end1 = Endpoint.TAIL;
-                } else {
-                    throw new IllegalArgumentException();
-                }
-
-                if (end2 == '>') {
-                    _end2 = Endpoint.ARROW;
-                } else if (end2 == 'o') {
-                    _end2 = Endpoint.CIRCLE;
-                } else if (end2 == '-') {
-                    _end2 = Endpoint.TAIL;
-                } else {
-                    throw new IllegalArgumentException();
-                }
-
-                Edge _edge = new Edge(_from, _to, _end1, _end2);
-
-                graph.addEdge(_edge);
-            }
-
-            return graph;
+            Reader in1 = new FileReader(file);
+            return readerToGraphTxt(in1);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         throw new IllegalStateException();
+    }
+
+    public static Graph readerToGraphTxt(String graphString) throws IOException {
+       return readerToGraphTxt(new CharArrayReader(graphString.toCharArray()));
+    }
+
+    public static Graph readerToGraphTxt(Reader reader) throws IOException {
+        BufferedReader in = new BufferedReader(reader);
+
+        while (!in.readLine().trim().equals("Graph Nodes:")) ;
+
+        String line;
+        Graph graph = new EdgeListGraph();
+
+        while (!(line = in.readLine().trim()).equals("")) {
+            String[] tokens = line.split(" ");
+
+            for (String token : tokens) {
+                graph.addNode(new GraphNode(token));
+            }
+        }
+
+        while (!in.readLine().trim().equals("Graph Edges:")) ;
+
+        while ((line = in.readLine()) != null) {
+            line = line.trim();
+            if (line.equals("")) break;
+//                System.out.println(line);
+
+            String[] tokens = line.split(" ");
+
+            String from = tokens[1];
+            String edge = tokens[2];
+            String to = tokens[3];
+
+            Node _from = graph.getNode(from);
+            Node _to = graph.getNode(to);
+
+            char end1 = edge.charAt(0);
+            char end2 = edge.charAt(2);
+
+            Endpoint _end1, _end2;
+
+            if (end1 == '<') {
+                _end1 = Endpoint.ARROW;
+            } else if (end1 == 'o') {
+                _end1 = Endpoint.CIRCLE;
+            } else if (end1 == '-') {
+                _end1 = Endpoint.TAIL;
+            } else {
+                throw new IllegalArgumentException();
+            }
+
+            if (end2 == '>') {
+                _end2 = Endpoint.ARROW;
+            } else if (end2 == 'o') {
+                _end2 = Endpoint.CIRCLE;
+            } else if (end2 == '-') {
+                _end2 = Endpoint.TAIL;
+            } else {
+                throw new IllegalArgumentException();
+            }
+
+            Edge _edge = new Edge(_from, _to, _end1, _end2);
+
+            graph.addEdge(_edge);
+        }
+
+        return graph;
     }
 
     public static HashMap<String, PointXy> grabLayout(List<Node> nodes) {
@@ -3205,6 +3214,86 @@ public final class GraphUtils {
         }
     }
 
+    public static String graphToText(Graph graph) {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append("\nGraph Nodes:\n");
+
+        List<Node> nodes = graph.getNodes();
+
+        for (int i = 0; i < nodes.size(); i++) {
+//            buf.append("\n" + (i + 1) + ". " + nodes.get(i));
+            buf.append(nodes.get(i)).append(" ");
+            if ((i + 1) % 30 == 0) buf.append("\n");
+        }
+
+        buf.append("\n\nGraph Edges: ");
+
+        List<Edge> edges = new ArrayList<Edge>(graph.getEdges());
+
+        Edges.sortEdges(edges);
+
+        for (int i = 0; i < edges.size(); i++) {
+            Edge edge = edges.get(i);
+            buf.append("\n").append(i + 1).append(". ").append(edge);
+        }
+
+        buf.append("\n");
+        buf.append("\n");
+
+        Set<Triple> ambiguousTriples = graph.getAmbiguousTriples();
+
+        if (!ambiguousTriples.isEmpty()) {
+            buf.append("Ambiguous triples (i.e. list of triples for which there is ambiguous data" +
+                    "\nabout whether they are colliders or not): \n");
+
+            for (Triple triple : ambiguousTriples) {
+                buf.append(triple).append("\n");
+            }
+        }
+
+        Set<Triple> underLineTriples = graph.getUnderLines();
+
+        if (!underLineTriples.isEmpty()) {
+            buf.append("Underline triples: \n");
+
+            for (Triple triple : underLineTriples) {
+                buf.append(triple).append("\n");
+            }
+        }
+
+        Set<Triple> dottedUnderLineTriples = graph.getDottedUnderlines();
+
+        if (!dottedUnderLineTriples.isEmpty()) {
+            buf.append("Dotted underline triples: \n");
+
+            for (Triple triple : dottedUnderLineTriples) {
+                buf.append(triple).append("\n");
+            }
+        }
+//
+//        buf.append("\nNode positions\n");
+//
+//        for (Node node : getNodes()) {
+//            buf.append("\n" + node + ": (" + node.getCenterX() + ", " + node.getCenterY() + ")");
+//        }
+
+//        buf.append("\nR selection:\n");
+//
+//        buf.append("\n\ndata<-data[c(\"");
+//
+//        for (int i = 0; i < nodes.size(); i++) {
+//            buf.append(nodes.get(i));
+//
+//            if (i < nodes.size() - 1) {
+//                buf.append("\",\"");
+//            } else {
+//                buf.append("\")]");
+//            }
+//        }
+        return buf.toString();
+    }
+
     public static class GraphComparison {
         private int adjFn;
         private int adjFp;
@@ -3212,6 +3301,12 @@ public final class GraphUtils {
         private int arrowptFn;
         private int arrowptFp;
         private int arrowptCorrect;
+
+        private double adjPrec;
+        private double adjRec;
+        private double arrowptPrec;
+        private double arrowptRec;
+
         private int shd;
         private int twoCycleFn;
         private int twoCycleFp;
@@ -3224,6 +3319,7 @@ public final class GraphUtils {
 
         public GraphComparison(int adjFn, int adjFp, int adjCorrect,
                                int arrowptFn, int arrowptFp, int arrowptCorrect,
+                               double adjPrec, double adjRec, double arrowptPrec, double arrowptRec,
                                int shd,
                                int twoCycleCorrect, int twoCycleFn, int twoCycleFp,
                                List<Edge> edgesAdded, List<Edge> edgesRemoved,
@@ -3235,6 +3331,12 @@ public final class GraphUtils {
             this.arrowptFn = arrowptFn;
             this.arrowptFp = arrowptFp;
             this.arrowptCorrect = arrowptCorrect;
+
+            this.adjPrec = adjPrec;
+            this.adjRec = adjRec;
+            this.arrowptPrec = arrowptPrec;
+            this.arrowptRec = arrowptRec;
+
             this.shd = shd;
             this.twoCycleCorrect = twoCycleCorrect;
             this.twoCycleFn = twoCycleFn;
@@ -3299,6 +3401,22 @@ public final class GraphUtils {
 
         public List<Edge> getEdgesReorientedTo() {
             return edgesReorientedTo;
+        }
+
+        public double getAdjPrec() {
+            return adjPrec;
+        }
+
+        public double getAdjRec() {
+            return adjRec;
+        }
+
+        public double getArrowptPrec() {
+            return arrowptPrec;
+        }
+
+        public double getArrowptRec() {
+            return arrowptRec;
         }
     }
 

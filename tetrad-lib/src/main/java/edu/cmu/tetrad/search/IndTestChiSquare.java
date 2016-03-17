@@ -367,7 +367,7 @@ public final class IndTestChiSquare implements IndependenceTest {
     private double getDeterminationP() {
         return determinationP;
     }
-
+    
     public void setDeterminationP(double determinationP) {
         this.determinationP = determinationP;
     }
@@ -398,7 +398,7 @@ public final class IndTestChiSquare implements IndependenceTest {
 
     @Override
     public double getScore() {
-        return pValue;
+        return -(getPValue() - getAlpha());
     }
 
     public void startRecordingFacts() {

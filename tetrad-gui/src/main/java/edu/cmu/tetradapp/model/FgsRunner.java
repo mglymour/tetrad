@@ -26,12 +26,11 @@ import edu.cmu.tetrad.graph.*;
 import edu.cmu.tetrad.search.*;
 import edu.cmu.tetrad.session.DoNotAddOldModel;
 import edu.cmu.tetrad.util.TetradSerializableUtils;
-import edu.cmu.tetrad.util.Unmarshallable;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.DecimalFormat;
+import java.util.*;
 
 /**
  * Extends AbstractAlgorithmRunner to produce a wrapper for the GES algorithm.
@@ -40,12 +39,9 @@ import java.util.List;
  */
 
 public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, GraphSource,
-        PropertyChangeListener, IGesRunner, Indexable, DoNotAddOldModel {
+        PropertyChangeListener, IGesRunner, Indexable, DoNotAddOldModel  {
     static final long serialVersionUID = 23L;
-
-    public Type getType() {
-        return type;
-    }
+    private LinkedHashMap<String, String> allParamSettings;
 
     public enum Type {CONTINUOUS, DISCRETE, GRAPH}
 
@@ -54,18 +50,15 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
     private int index;
     private transient Fgs fgs;
     private transient Graph initialGraph;
-    private Type type;
 
     //============================CONSTRUCTORS============================//
 
     public FgsRunner(DataWrapper dataWrapper, FgsParams params, KnowledgeBoxModel knowledgeBoxModel) {
         super(new MergeDatasetsWrapper(dataWrapper), params, knowledgeBoxModel);
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper, FgsParams params) {
         super(new MergeDatasetsWrapper(dataWrapper), params, null);
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper, GraphSource graph, FgsParams params) {
@@ -73,14 +66,12 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
 //        if (graph == dataWrapper) throw new IllegalArgumentException();
         if (graph == this) throw new IllegalArgumentException();
         this.initialGraph = graph.getGraph();
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper, GraphSource graph, FgsParams params, KnowledgeBoxModel knowledgeBoxModel) {
         super(new MergeDatasetsWrapper(dataWrapper), params, knowledgeBoxModel);
         if (graph == this) throw new IllegalArgumentException();
         this.initialGraph = graph.getGraph();
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper1,
@@ -91,7 +82,6 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                         dataWrapper1,
                         dataWrapper2),
                 params, null);
-        type = computeType();
 
     }
 
@@ -107,7 +97,6 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                 ),
                 params, null);
 
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper1,
@@ -124,7 +113,6 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                 ),
                 params, null);
 
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper1,
@@ -143,7 +131,6 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                 ),
                 params, null);
 
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper1,
@@ -164,7 +151,6 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                 ),
                 params, null);
 
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper1,
@@ -187,7 +173,6 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                 ),
                 params, null);
 
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper1,
@@ -212,7 +197,6 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                 ),
                 params, null);
 
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper1,
@@ -239,7 +223,6 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                 ),
                 params, null);
 
-        type = computeType();
     }
 
     public FgsRunner(DataWrapper dataWrapper1,
@@ -268,17 +251,14 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                 ),
                 params, null);
 
-        type = computeType();
     }
 
     public FgsRunner(GraphWrapper graphWrapper, FgsParams params, KnowledgeBoxModel knowledgeBoxModel) {
         super(graphWrapper.getGraph(), params, knowledgeBoxModel);
-        type = computeType();
     }
 
     public FgsRunner(GraphWrapper graphWrapper, FgsParams params) {
         super(graphWrapper.getGraph(), params, null);
-        type = computeType();
     }
 
     /**
@@ -363,10 +343,14 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                 double penalty = ((FgsParams) getParams()).getComplexityPenalty();
 
                 if (indTestParams.isFirstNontriangular()) {
-                    fgs = new Fgs(new SemBicScoreImages(list));
+                    SemBicScoreImages fgsScore = new SemBicScoreImages(list);
+                    fgsScore.setPenaltyDiscount(penalty);
+                    fgs = new Fgs(fgsScore);
                     fgs.setPenaltyDiscount(penalty);
                 } else {
-                    fgs = new Fgs(new SemBicScoreImages(list));
+                    SemBicScoreImages fgsScore = new SemBicScoreImages(list);
+                    fgsScore.setPenaltyDiscount(penalty);
+                    fgs = new Fgs(fgsScore);
                     fgs.setPenaltyDiscount(penalty);
                 }
             } else if (allDiscrete(list)) {
@@ -410,6 +394,7 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
         this.topGraphs = new ArrayList<>(fgs.getTopGraphs());
 
         if (topGraphs.isEmpty()) {
+
             topGraphs.add(new ScoredGraph(getResultGraph(), Double.NaN));
         }
 
@@ -420,7 +405,7 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
      * Executes the algorithm, producing (at least) a result workbench. Must be
      * implemented in the extending class.
      */
-    public Type computeType() {
+    public Type getType() {
         Object model = getDataModel();
 
         if (model == null && getSourceGraph() != null) {
@@ -433,6 +418,8 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
                     "The issue is that we use a seed to simulate from IM's, so your data is not saved to \n" +
                     "file when you save the session. It can, however, be recreated from the saved seed.");
         }
+
+        Type type;
 
         if (model instanceof Graph) {
             type = Type.GRAPH;
@@ -458,6 +445,8 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
             } else {
                 throw new IllegalArgumentException("Data must be either all discrete or all continuous.");
             }
+        } else {
+            throw new IllegalArgumentException("Unrecognized data type.");
         }
 
         return type;
@@ -528,6 +517,19 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
         return rules;
     }
 
+    @Override
+    public Map<String, String> getParamSettings() {
+        super.getParamSettings();
+        FgsParams params = (FgsParams) getParams();
+        paramSettings.put("Penalty Discount", new DecimalFormat("0.0").format(params.getComplexityPenalty()));
+        return paramSettings;
+    }
+
+    @Override
+    public String getAlgorithmName() {
+        return "FGS";
+    }
+
     public void propertyChange(PropertyChangeEvent evt) {
         firePropertyChange(evt);
     }
@@ -564,7 +566,6 @@ public class FgsRunner extends AbstractAlgorithmRunner implements IFgsRunner, Gr
     public GraphScorer getGraphScorer() {
         return fgs;
     }
-
 }
 
 

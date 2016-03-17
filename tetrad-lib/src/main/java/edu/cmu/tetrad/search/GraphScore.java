@@ -22,10 +22,12 @@
 package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.DataSet;
-import edu.cmu.tetrad.graph.*;
+import edu.cmu.tetrad.graph.Graph;
+import edu.cmu.tetrad.graph.Node;
+import edu.cmu.tetrad.graph.NodeType;
 
-import java.util.*;
-import java.util.stream.Collector;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implements Chickering and Meek's (2002) locally consistent score criterion.
@@ -75,8 +77,8 @@ public class GraphScore implements FgsScore {
 
     @Override
     public double localScoreDiff(int x, int y, int[] z) {
-//        return locallyConsistentScoringCriterion(x, y, z);
-        return aBetterScore(x, y, z);
+        return locallyConsistentScoringCriterion(x, y, z);
+//        return aBetterScore(x, y, z);
     }
 
     private double locallyConsistentScoringCriterion(int x, int y, int[] z) {

@@ -140,7 +140,6 @@ public class CcdRunner extends AbstractAlgorithmRunner
         Ccd ccd = new Ccd(getIndependenceTest());
         ccd.setDepth(getParams().getIndTestParams().getDepth());
         ccd.setKnowledge(getParams().getKnowledge());
-        ccd.setInitialGraph(getInitialGraph());
         Graph graph = ccd.search();
 
         setResultGraph(graph);
@@ -190,6 +189,11 @@ public class CcdRunner extends AbstractAlgorithmRunner
         triplesList.add(GraphUtils.getUnderlinedTriplesFromGraph(node, graph));
         triplesList.add(GraphUtils.getDottedUnderlinedTriplesFromGraph(node, graph));
         return triplesList;
+    }
+
+    @Override
+    public String getAlgorithmName() {
+        return "CCD";
     }
 }
 

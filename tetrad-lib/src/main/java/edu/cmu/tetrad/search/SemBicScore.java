@@ -30,14 +30,16 @@ import edu.cmu.tetrad.util.TetradVector;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implements the continuous BIC score for FGS.
  *
  * @author Joseph Ramsey
  */
-public class SemBicScore implements ISemBicScore {
+public class SemBicScore implements FgsScore {
 
     // The covariance matrix.
     private ICovarianceMatrix covariances;
@@ -60,6 +62,7 @@ public class SemBicScore implements ISemBicScore {
 
     // True if verbose output should be sent to out.
     private boolean verbose = false;
+    private Set<Integer> forbidden = new HashSet<>();
 
     public SemBicScore(ICovarianceMatrix covariances) {
         this(covariances, 2.0);
@@ -82,40 +85,47 @@ public class SemBicScore implements ISemBicScore {
     /**
      * Calculates the sample likelihood and BIC score for i given its parents in a simple SEM model
      */
-    public double localScore(int i, int[] parents) {
-        if (parents.length == 0) return localScore(i);
-        else if (parents.length == 1) return localScore(i, parents[0]);
+    public double localScore(int i, int... parents) {
+        for (int p : parents) if (forbidden.contains(p)) return Double.NaN;
+
+//        if (parents.length == 0) return localScore(i);
+//        else if (parents.length == 1) return localScore(i, parents[0]);
 
         double residualVariance = getCovariances().getValue(i, i);
         int n = getSampleSize();
         int p = parents.length;
         TetradMatrix covxx = getSelection1(getCovariances(), parents);
-        TetradMatrix covxxInv;
 
         try {
-            covxxInv = covxx.inverse();
+            TetradMatrix covxxInv = covxx.inverse();
+
+            TetradVector covxy = getSelection2(getCovariances(), parents, i);
+            TetradVector b = covxxInv.times(covxy);
+            residualVariance -= covxy.dotProduct(b);
+
+            if (residualVariance <= 0) {
+                if (isVerbose()) {
+                    out.println("Nonpositive residual varianceY: resVar / varianceY = " + (residualVariance / getCovariances().getValue(i, i)));
+                }
+                return Double.NaN;
+            }
+
+            double c = getPenaltyDiscount();
+            return score(residualVariance, n, p, c);
         } catch (Exception e) {
-            if (isIgnoreLinearDependent()) {
-                return Double.NaN;
-            } else {
-                printMinimalLinearlyDependentSet(parents, getCovariances());
-                return Double.NaN;
-            }
-        }
+            boolean removedOne = true;
 
-        TetradVector covxy = getSelection2(getCovariances(), parents, i);
-        TetradVector b = covxxInv.times(covxy);
-        residualVariance -= covxy.dotProduct(b);
-
-        if (residualVariance <= 0) {
-            if (isVerbose()) {
-                out.println("Nonpositive residual varianceY: resVar / varianceY = " + (residualVariance / getCovariances().getValue(i, i)));
+            while (removedOne) {
+                List<Integer> _parents = new ArrayList<>();
+                for (int y = 0; y < parents.length; y++) _parents.add(parents[y]);
+                _parents.removeAll(forbidden);
+                parents = new int[_parents.size()];
+                for (int y = 0; y < _parents.size(); y++) parents[y] = _parents.get(y);
+                removedOne = printMinimalLinearlyDependentSet(parents, getCovariances());
             }
+
             return Double.NaN;
         }
-
-        double c = getPenaltyDiscount();
-        return score(residualVariance, n, p, c);
     }
 
     @Override
@@ -123,7 +133,7 @@ public class SemBicScore implements ISemBicScore {
         return localScore(y, append(z, x)) - localScore(y, z);
     }
 
-    int[] append(int[] parents, int extra) {
+    private int[] append(int[] parents, int extra) {
         int[] all = new int[parents.length + 1];
         System.arraycopy(parents, 0, all, 0, parents.length);
         all[parents.length] = extra;
@@ -210,7 +220,7 @@ public class SemBicScore implements ISemBicScore {
 
     @Override
     public boolean isEffectEdge(double bump) {
-        return bump > -0.25 * getPenaltyDiscount() * Math.log(sampleSize);
+        return bump > 0;//-0.25 * getPenaltyDiscount() * Math.log(sampleSize);
     }
 
     public DataSet getDataSet() {
@@ -228,6 +238,7 @@ public class SemBicScore implements ISemBicScore {
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
     }
+
     @Override
     public List<Node> getVariables() {
         return variables;
@@ -262,7 +273,7 @@ public class SemBicScore implements ISemBicScore {
     }
 
     // Prints a smallest subset of parents that causes a singular matrix exception.
-    private void printMinimalLinearlyDependentSet(int[] parents, ICovarianceMatrix cov) {
+    private boolean printMinimalLinearlyDependentSet(int[] parents, ICovarianceMatrix cov) {
         List<Node> _parents = new ArrayList<>();
         for (int p : parents) _parents.add(variables.get(p));
 
@@ -282,9 +293,14 @@ public class SemBicScore implements ISemBicScore {
             try {
                 m.inverse();
             } catch (Exception e2) {
+                forbidden.add(sel[0]);
                 out.println("### Linear dependence among variables: " + _sel);
+                out.println("### Removing " + _sel.get(0));
+                return true;
             }
         }
+
+        return false;
     }
 
     private void setCovariances(ICovarianceMatrix covariances) {
