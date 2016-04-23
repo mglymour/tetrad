@@ -39,7 +39,7 @@ import java.util.Set;
  *
  * @author Joseph Ramsey
  */
-public class SemBicScore implements Score {
+public class SemBicScore implements FgsScore {
 
     // The covariance matrix.
     private ICovarianceMatrix covariances;
@@ -63,12 +63,15 @@ public class SemBicScore implements Score {
     // True if verbose output should be sent to out.
     private boolean verbose = false;
     private Set<Integer> forbidden = new HashSet<>();
-    private final double logn;
+
+    public SemBicScore(ICovarianceMatrix covariances) {
+        this(covariances, 2.0);
+    }
 
     /**
      * Constructs the score using a covariance matrix.
      */
-    public SemBicScore(ICovarianceMatrix covariances) {
+    public SemBicScore(ICovarianceMatrix covariances, double penaltyDiscount) {
         if (covariances == null) {
             throw new NullPointerException();
         }
@@ -76,8 +79,7 @@ public class SemBicScore implements Score {
         this.setCovariances(covariances);
         this.variables = covariances.getVariables();
         this.sampleSize = covariances.getSampleSize();
-        this.penaltyDiscount = 2;
-        logn = Math.log(sampleSize);
+        this.penaltyDiscount = penaltyDiscount;
     }
 
     /**
@@ -109,7 +111,7 @@ public class SemBicScore implements Score {
             }
 
             double c = getPenaltyDiscount();
-            return score(residualVariance, n, logn, p, c);
+            return score(residualVariance, n, p, c);
         } catch (Exception e) {
             boolean removedOne = true;
 
@@ -129,11 +131,6 @@ public class SemBicScore implements Score {
     @Override
     public double localScoreDiff(int x, int y, int[] z) {
         return localScore(y, append(z, x)) - localScore(y, z);
-    }
-
-    @Override
-    public double localScoreDiff(int x, int y) {
-        return localScore(y, x) - localScore(y);
     }
 
     private int[] append(int[] parents, int extra) {
@@ -172,7 +169,7 @@ public class SemBicScore implements Score {
         }
 
         double c = getPenaltyDiscount();
-        return score(residualVariance, n, logn, p, c);
+        return score(residualVariance, n, p, c);
     }
 
     /**
@@ -191,7 +188,7 @@ public class SemBicScore implements Score {
         }
 
         double c = getPenaltyDiscount();
-        return score(residualVariance, n, logn, p, c);
+        return score(residualVariance, n, p, c);
     }
 
     /**
@@ -263,8 +260,8 @@ public class SemBicScore implements Score {
     }
 
     // Calculates the BIC score.
-    private double score(double residualVariance, int n, double logn, int p, double c) {
-        return -n * Math.log(residualVariance) - c * (p + 1) * logn;
+    private double score(double residualVariance, int n, int p, double c) {
+        return -n * Math.log(residualVariance) - c * (p + 1) * Math.log(n);
     }
 
     private TetradMatrix getSelection1(ICovarianceMatrix cov, int[] rows) {
@@ -313,17 +310,6 @@ public class SemBicScore implements Score {
     public void setVariables(List<Node> variables) {
         covariances.setVariables(variables);
         this.variables = variables;
-    }
-
-    @Override
-    public Node getVariable(String targetName) {
-        for (Node node : variables) {
-            if (node.getName().equals(targetName)) {
-                return node;
-            }
-        }
-
-        return null;
     }
 }
 

@@ -1006,18 +1006,12 @@ public final class DataUtils {
 
         for (int j = 0; j < means.size(); j++) {
             double sum = 0.0;
-            int count = 0;
 
             for (int i = 0; i < data.rows(); i++) {
-                if (Double.isNaN(data.get(i, j))) {
-                    continue;
-                }
-
                 sum += data.get(i, j);
-                count++;
             }
 
-            double mean = sum / count;
+            double mean = sum / data.rows();
 
             means.set(j, mean);
         }
@@ -1034,18 +1028,12 @@ public final class DataUtils {
 
         for (int j = 0; j < means.size(); j++) {
             double sum = 0.0;
-            int count = 0;
 
             for (int i = 0; i < rows; i++) {
-                if (Double.isNaN(data[j][i])) {
-                    continue;
-                }
-
                 sum += data[j][i];
-                count++;
             }
 
-            double mean = sum / count;
+            double mean = sum / rows;
 
             means.set(j, mean);
         }

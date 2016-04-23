@@ -244,14 +244,14 @@ public final class FgsOrienter implements GraphSearch, GraphScorer, Reorienter {
     }
 
     /**
-     * Set to true if it is assumed that all path pairs with one length 1 path do not cancelAll.
+     * Set to true if it is assumed that all path pairs with one length 1 path do not cancel.
      */
     public void setFaithfulnessAssumed(boolean faithfulness) {
         this.faithfulnessAssumed = faithfulness;
     }
 
     /**
-     * @return true if it is assumed that all path pairs with one length 1 path do not cancelAll.
+     * @return true if it is assumed that all path pairs with one length 1 path do not cancel.
      */
     public boolean isFaithfulnessAssumed() {
         return this.faithfulnessAssumed;
@@ -564,7 +564,7 @@ public final class FgsOrienter implements GraphSearch, GraphScorer, Reorienter {
 
                         Node y = nodes.get(i);
 
-                        for (int j = 0; j < i; j++) {
+                        for (int j = i + 1; j < nodes.size(); j++) {
                             Node x = nodes.get(j);
 //
                             if (!graphToOrient.isAdjacentTo(x, y)) {
@@ -617,12 +617,12 @@ public final class FgsOrienter implements GraphSearch, GraphScorer, Reorienter {
 
                     return true;
                 } else {
-                    int mid = (to + from) / 2;
+                    int mid = (to - from) / 2;
 
                     List<EffectTask> tasks = new ArrayList<>();
 
-                    tasks.add(new EffectTask(chunk, from, mid));
-                    tasks.add(new EffectTask(chunk, mid, to));
+                    tasks.add(new EffectTask(chunk, from, from + mid));
+                    tasks.add(new EffectTask(chunk, from + mid, to));
 
                     invokeAll(tasks);
 
@@ -829,12 +829,12 @@ public final class FgsOrienter implements GraphSearch, GraphScorer, Reorienter {
 
                     return true;
                 } else {
-                    int mid = (to + from) / 2;
+                    int mid = (to - from) / 2;
 
                     List<AdjTask> tasks = new ArrayList<>();
 
-                    tasks.add(new AdjTask(pairs, from, mid));
-                    tasks.add(new AdjTask(pairs, mid, to));
+                    tasks.add(new AdjTask(pairs, from, from + mid));
+                    tasks.add(new AdjTask(pairs, from + mid, to));
 
                     invokeAll(tasks);
 
@@ -940,12 +940,12 @@ public final class FgsOrienter implements GraphSearch, GraphScorer, Reorienter {
 
                     return true;
                 } else {
-                    int mid = (to + from) / 2;
+                    int mid = (to - from) / 2;
 
                     List<BackwardTask> tasks = new ArrayList<>();
 
-                    tasks.add(new BackwardTask(nodes, chunk, from, mid, hashIndices));
-                    tasks.add(new BackwardTask(nodes, chunk, mid, to, hashIndices));
+                    tasks.add(new BackwardTask(nodes, chunk, from, from + mid, hashIndices));
+                    tasks.add(new BackwardTask(nodes, chunk, from + mid, to, hashIndices));
 
                     invokeAll(tasks);
 

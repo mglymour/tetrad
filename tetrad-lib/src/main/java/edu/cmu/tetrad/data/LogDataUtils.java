@@ -21,7 +21,6 @@
 
 package edu.cmu.tetrad.data;
 
-import edu.cmu.tetrad.search.Tetrad;
 import edu.cmu.tetrad.util.TetradLogger;
 
 /**
@@ -33,22 +32,17 @@ public class LogDataUtils {
 
         if (list.size() == 1) {
             TetradLogger.getInstance().log("info", "\nThere is one data set in this box.");
-
-            if (TetradLogger.getInstance().isEventActive("data")) {
-                TetradLogger.getInstance().log("data", list.get(0).toString());
-            }
+            TetradLogger.getInstance().log("data", list.get(0).toString());
         } else {
             TetradLogger.getInstance().log("info", "\nThere are " + list.size() + " data sets in this box.");
 
 
             for (int i = 0; i < list.size(); i++) {
                 TetradLogger.getInstance().log("data", "\nData set # " + (i + 1));
-
-                if (TetradLogger.getInstance().isEventActive("data")) {
-                    TetradLogger.getInstance().log("data", "" + list.get(i));
-                }
+                TetradLogger.getInstance().log("data", "" + list.get(i));
             }
         }
+
     }
 }
 

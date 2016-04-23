@@ -104,11 +104,6 @@ public class BdeuScoreImages implements IBDeuScore {
         return sum / scores.size();
     }
 
-    @Override
-    public double localScoreDiff(int x, int y) {
-        return localScoreDiff(x, y, new int[0]);
-    }
-
     /**
      * Calculates the sample likelihood and BIC score for i given its parents in a simple SEM model
      */
@@ -269,17 +264,6 @@ public class BdeuScoreImages implements IBDeuScore {
             score.setStructurePrior(structurePrior);
         }
         this.structurePrior = structurePrior;
-    }
-
-    @Override
-    public Node getVariable(String targetName) {
-        for (Node node : variables) {
-            if (node.getName().equals(targetName)) {
-                return node;
-            }
-        }
-
-        return null;
     }
 }
 

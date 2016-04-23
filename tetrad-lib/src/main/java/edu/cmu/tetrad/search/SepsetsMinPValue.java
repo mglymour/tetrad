@@ -134,13 +134,8 @@ public class SepsetsMinPValue implements SepsetProducer {
     }
 
     @Override
-    public double getPValue() {
-        return p;
-    }
-
-    @Override
     public double getScore() {
-        return -(p - independenceTest.getAlpha());
+        return p;
     }
 
     @Override
@@ -160,7 +155,5 @@ public class SepsetsMinPValue implements SepsetProducer {
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
     }
-
-
 }
 

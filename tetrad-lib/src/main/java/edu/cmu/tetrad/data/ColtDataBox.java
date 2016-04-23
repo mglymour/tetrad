@@ -83,13 +83,9 @@ public class ColtDataBox implements DataBox {
      */
     public void set(int row, int col, Number value) {
         if (value == null) {
-            synchronized (data) {
-                data.set(row, col, Double.NaN);
-            }
+            data.set(row, col, Double.NaN);
         } else {
-            synchronized (data) {
-                data.set(row, col, value.doubleValue());
-            }
+            data.set(row, col, value.doubleValue());
         }
     }
 

@@ -179,7 +179,7 @@ public class FofcRunner extends AbstractMimRunner
     public List<String> getVariableNames() {
         List<List<Node>> partition = ClusterUtils.clustersToPartition(getClusters(),
                 getData().getVariables());
-        return ClusterUtils.generateLatentNames(partition.size());
+        return MimBuild.generateLatentNames(partition.size());
     }
 }
 

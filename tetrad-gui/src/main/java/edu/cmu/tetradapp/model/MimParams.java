@@ -98,6 +98,10 @@ public interface MimParams extends Params, KnowledgeTransferable, TetradSerializ
 
     void setPurifyTestType(TestType purifyTestType);
 
+    int getAlgorithmType();
+
+    void setAlgorithmType(int tt);
+
     double getMaxP();
 
     void setMaxP(double p);
@@ -123,6 +127,8 @@ public interface MimParams extends Params, KnowledgeTransferable, TetradSerializ
     void setMaxAlpha(double alpha);
 
     Clusters getMaxClusters();
+
+    double getMaxAlpha();
 }
 
 

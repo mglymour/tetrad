@@ -39,8 +39,8 @@ public class SepsetsMinScore implements SepsetProducer {
     private final SepsetMap extraSepsets;
     private int depth = 3;
     private double score = Double.NaN;
+    //    private IndependenceTest dsep = null;
     private boolean verbose = false;
-    private double p = Double.NaN;
 
     public SepsetsMinScore(Graph graph, IndependenceTest independenceTest, SepsetMap extraSepsets, int depth) {
         this.graph = graph;
@@ -74,11 +74,10 @@ public class SepsetsMinScore implements SepsetProducer {
             final List<Node> v = extraSepsets.get(i, k);
             if (v != null) {
                 independenceTest.isIndependent(i, k, v);
-                double _score = independenceTest.getScore();
+                double p = independenceTest.getScore();
 
-                if (_score < score) {
-                    score = _score;
-                    this.p = independenceTest.getPValue();
+                if (p < score) {
+                    score = p;
                     _v = v;
                 }
             }
@@ -101,7 +100,6 @@ public class SepsetsMinScore implements SepsetProducer {
 
                 if (_score < 0 && _score < score) {
                     score = _score;
-                    this.p = independenceTest.getPValue();
                     _v = v;
                 }
             }
@@ -119,7 +117,6 @@ public class SepsetsMinScore implements SepsetProducer {
 
                 if (_score < 0 && _score < score) {
                     score = _score;
-                    this.p = independenceTest.getPValue();
                     _v = v;
                 }
             }
@@ -132,11 +129,6 @@ public class SepsetsMinScore implements SepsetProducer {
     @Override
     public boolean isIndependent(Node a, Node b, List<Node> c) {
         return independenceTest.isIndependent(a, b, c);
-    }
-
-    @Override
-    public double getPValue() {
-        return p;
     }
 
     @Override
@@ -161,6 +153,5 @@ public class SepsetsMinScore implements SepsetProducer {
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
     }
-
 }
 

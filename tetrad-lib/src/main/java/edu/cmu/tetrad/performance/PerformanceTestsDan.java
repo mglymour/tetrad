@@ -172,8 +172,8 @@ public class PerformanceTestsDan {
             gFci.setPenaltyDiscount(penaltyDiscount);
             gFci.setDepth(depth);
             gFci.setMaxPathLength(maxPathLength);
-//            gFci.setPossibleDsepSearchDone(true);
-            gFci.setCompleteRuleSetUsed(false);
+            gFci.setPossibleDsepSearchDone(true);
+            gFci.setCompleteRuleSetUsed(true);
 
             Graph pag = gFci.search();
 

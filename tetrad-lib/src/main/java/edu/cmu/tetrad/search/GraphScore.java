@@ -34,7 +34,7 @@ import java.util.List;
  *
  * @author Joseph Ramsey
  */
-public class GraphScore implements Score {
+public class GraphScore implements FgsScore {
 
     private final Graph dag;
 
@@ -81,25 +81,11 @@ public class GraphScore implements Score {
 //        return aBetterScore(x, y, z);
     }
 
-    @Override
-    public double localScoreDiff(int x, int y) {
-        return localScoreDiff(x, y, new int[0]);
-//        return localScore(y, x) - localScore(y);
-    }
-
     private double locallyConsistentScoringCriterion(int x, int y, int[] z) {
         Node _y = variables.get(y);
         Node _x = variables.get(x);
         List<Node> _z = getVariableList(z);
-        boolean dSeparatedFrom = dag.isDSeparatedFrom(_x, _y, _z);
-
-//        if (dSeparatedFrom) {
-//            System.out.println(SearchLogUtils.independenceFact(_x, _y, _z));
-//        } else {
-//            System.out.println("\t NOT " + SearchLogUtils.independenceFact(_x, _y, _z));
-//        }
-
-        return dSeparatedFrom ? -1.0 : 1.0;
+        return dag.isDSeparatedFrom(_x, _y, _z) ? -1.0 : 1.0;
     }
 
     private double aBetterScore(int x, int y, int[] z) {
@@ -153,7 +139,7 @@ public class GraphScore implements Score {
 
     @Override
     public boolean isEffectEdge(double bump) {
-        return bump > 0;
+        return true;
     }
 
     public DataSet getDataSet() {
@@ -173,16 +159,6 @@ public class GraphScore implements Score {
         return variables;
     }
 
-    public Node getVariable(String name) {
-        for (Node node : variables) {
-            if (node.getName().equals(name)) {
-                return node;
-            }
-        }
-
-        throw new IllegalArgumentException("No variable by that name: " + name);
-    }
-
     public int getSampleSize() {
         return 0;
     }
@@ -198,10 +174,6 @@ public class GraphScore implements Score {
 
     public void setParameter1(double alpha) {
         throw new UnsupportedOperationException("No alpha can be set when searching usign d-separation.");
-    }
-
-    public Graph getDag() {
-        return dag;
     }
 }
 

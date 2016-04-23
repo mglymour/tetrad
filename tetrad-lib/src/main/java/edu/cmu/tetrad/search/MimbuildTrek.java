@@ -150,7 +150,7 @@ public class MimbuildTrek {
 //            graph = search.search();
 //        } catch (Exception e) {
 ////            e.printStackTrace();
-//            CPC search = new CPC(new IndTestFisherZ(latentscov, alpha));
+//            Cpc search = new Cpc(new IndTestFisherZ(latentscov, alpha));
 //            search.setKnowledge(knowledge);
 //            graph = search.search();
 //        }

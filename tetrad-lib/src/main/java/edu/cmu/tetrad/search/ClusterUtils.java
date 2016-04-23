@@ -33,7 +33,6 @@ import java.util.*;
  * @author Joseph Ramsey
  */
 public class ClusterUtils {
-    public static final String LATENT_PREFIX = "_L";
 //    public static TetradMatrix restrictToRows(TetradMatrix data, List<Integer> rows) {
 //        int[] _rows = asArray(rows);
 //        int[] _cols = new int[data.columns()];
@@ -601,7 +600,7 @@ public class ClusterUtils {
 
         Set<Node> latentsSet = new HashSet<Node>();
         for (int i = 0; i < clusters.size(); i++) {
-            Node latent = new GraphNode(LATENT_PREFIX + (i + 1));
+            Node latent = new GraphNode(MimBuild.LATENT_PREFIX + (i + 1));
             latent.setNodeType(NodeType.LATENT);
             nodes.add(latent);
             latentsSet.add(latent);
@@ -789,14 +788,6 @@ public class ClusterUtils {
         }
 
         TetradLogger.getInstance().log("clusters", buf.toString());
-    }
-
-    public static List<String> generateLatentNames(int total) {
-        List<String> output = new ArrayList<String>();
-        for (int i = 0; i < total; i++) {
-            output.add(LATENT_PREFIX + (i + 1));
-        }
-        return output;
     }
 }
 

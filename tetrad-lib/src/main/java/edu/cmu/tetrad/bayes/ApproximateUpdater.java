@@ -155,7 +155,7 @@ public final class ApproximateUpdater implements ManipulatingBayesUpdater {
 
         this.evidence = new Evidence(evidence);
 
-        Graph graph = bayesIm.getBayesPm().getDag();
+        Dag graph = bayesIm.getBayesPm().getDag();
         Dag manipulatedGraph = createManipulatedGraph(graph);
         BayesPm manipulatedBayesPm = createUpdatedBayesPm(manipulatedGraph);
         this.manipulatedBayesIm = createdUpdatedBayesIm(manipulatedBayesPm);

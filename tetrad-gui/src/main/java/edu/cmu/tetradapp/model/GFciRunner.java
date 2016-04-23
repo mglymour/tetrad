@@ -50,7 +50,6 @@ public class GFciRunner extends AbstractAlgorithmRunner
     public GFciRunner(GraphSource graphWrapper, PcSearchParams params, KnowledgeBoxModel knowledgeBoxModel) {
         super(graphWrapper.getGraph(), params, knowledgeBoxModel);
     }
-
     /**
      * Constructs a wrapper for the given DataWrapper. The DataWrapper must
      * contain a DataSet that is either a DataSet or a DataSet or a DataList
@@ -109,30 +108,34 @@ public class GFciRunner extends AbstractAlgorithmRunner
 
         Graph graph;
 
-        if (getIndependenceTest() instanceof IndTestDSep) {
-            GFci gfci = new GFci(getIndependenceTest());
-            graph = gfci.search();
-        } else {
+        if (getIndependenceTest() instanceof  IndTestDSep) {
+            final DagToPag dagToPag = new DagToPag(((IndTestDSep) getIndependenceTest()).getGraph());
+            dagToPag.setCompleteRuleSetUsed(indTestParams.isCompleteRuleSetUsed());
+            graph = dagToPag.convert();
+        }
+        else {
             GFci fci = new GFci(getIndependenceTest());
             fci.setKnowledge(knowledge);
             fci.setCompleteRuleSetUsed(indTestParams.isCompleteRuleSetUsed());
+            fci.setPossibleDsepSearchDone(indTestParams.isPossibleDsepDone());
             fci.setMaxPathLength(indTestParams.getMaxReachablePathLength());
             fci.setDepth(indTestParams.getDepth());
-            double penaltyDiscount = indTestParams.getPenaltyDiscount();
-
-            fci.setPenaltyDiscount(penaltyDiscount);
+            fci.setPenaltyDiscount(indTestParams.getPenaltyDiscount());
             fci.setSamplePrior(indTestParams.getSamplePrior());
             fci.setStructurePrior(indTestParams.getStructurePrior());
             fci.setCompleteRuleSetUsed(false);
+            fci.setPenaltyDiscount(indTestParams.getPenaltyDiscount());
             fci.setFaithfulnessAssumed(indTestParams.isFaithfulnessAssumed());
             graph = fci.search();
         }
 
         if (getSourceGraph() != null) {
             GraphUtils.arrangeBySourceGraph(graph, getSourceGraph());
-        } else if (knowledge.isDefaultToKnowledgeLayout()) {
+        }
+        else if (knowledge.isDefaultToKnowledgeLayout()) {
             SearchGraphUtils.arrangeByKnowledgeTiers(graph, knowledge);
-        } else {
+        }
+        else {
             GraphUtils.circleLayout(graph, 200, 200, 150);
         }
 
@@ -152,7 +155,8 @@ public class GFciRunner extends AbstractAlgorithmRunner
         if (getParams() instanceof BasicSearchParams) {
             BasicSearchParams _params = (BasicSearchParams) params;
             testType = _params.getIndTestType();
-        } else {
+        }
+        else {
             GFciSearchParams _params = (GFciSearchParams) params;
             testType = _params.getIndTestType();
         }

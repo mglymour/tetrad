@@ -277,7 +277,7 @@ public final class MlBayesImObs implements BayesIm {
     /**
      * @return the DAG.
      */
-    public Graph getDag() {
+    public Dag getDag() {
         return bayesPm.getDag();
     }
 

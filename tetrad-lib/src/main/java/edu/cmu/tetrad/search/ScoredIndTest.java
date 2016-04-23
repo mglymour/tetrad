@@ -33,7 +33,7 @@ import java.util.List;
  *
  * @author Joseph Ramsey
  */
-public class ScoredIndTest implements Score {
+public class ScoredIndTest implements FgsScore {
 
     private final IndependenceTest test;
 
@@ -79,12 +79,6 @@ public class ScoredIndTest implements Score {
         test.isIndependent(variables.get(x), variables.get(y), getVariableList(z));
         return test.getScore();
     }
-
-    @Override
-    public double localScoreDiff(int x, int y) {
-        return localScore(y, x) - localScore(y);
-    }
-
 
     int[] append(int[] parents, int extra) {
         int[] all = new int[parents.length + 1];
@@ -140,24 +134,12 @@ public class ScoredIndTest implements Score {
     }
 
     public double getParameter1() {
-        return test.getAlpha();
+        throw new UnsupportedOperationException("No alpha can be set when searching usign d-separation.");
     }
 
     public void setParameter1(double alpha) {
-        test.setAlpha(alpha);
+        throw new UnsupportedOperationException("No alpha can be set when searching usign d-separation.");
     }
-
-    @Override
-    public Node getVariable(String targetName) {
-        for (Node node : variables) {
-            if (node.getName().equals(targetName)) {
-                return node;
-            }
-        }
-
-        return null;
-    }
-
 }
 
 

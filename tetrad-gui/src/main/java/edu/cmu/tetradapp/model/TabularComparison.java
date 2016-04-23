@@ -34,7 +34,6 @@ import java.io.ObjectInputStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
-import java.util.prefs.Preferences;
 
 
 /**
@@ -80,7 +79,7 @@ public final class TabularComparison implements SessionModel, SimulationParamsSo
     //=============================CONSTRUCTORS==========================//
 
     /**
-     * Compares the results of a PC to a reference workbench by counting errors
+     * Compares the results of a Pc to a reference workbench by counting errors
      * of omission and commission. The counts can be retrieved using the methods
      * <code>countOmissionErrors</code> and <code>countCommissionErrors</code>.
      */
@@ -141,13 +140,7 @@ public final class TabularComparison implements SessionModel, SimulationParamsSo
         }
 
         if (this.params != null) {
-            GraphUtils.GraphComparison graphComparison = SearchGraphUtils.getGraphComparison2(targetGraph, alteredRefGraph);
-            this.params.addRecord(graphComparison);
-
-            if (graphComparison.getAdjFn() != 0 || graphComparison.getAdjFp() != 0 ||
-                    graphComparison.getAhdFn() != 0 || graphComparison.getAhdFp() != 0) {
-                Preferences.userRoot().putBoolean("errorFound", true);
-            }
+           this.params.addRecord(SearchGraphUtils.getGraphComparison2(targetGraph, alteredRefGraph));
         }
 
         TetradLogger.getInstance().log("info", "Graph Comparison");

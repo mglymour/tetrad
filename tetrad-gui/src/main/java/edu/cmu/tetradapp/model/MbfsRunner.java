@@ -21,14 +21,15 @@
 
 package edu.cmu.tetradapp.model;
 
-import edu.cmu.tetrad.data.CovarianceMatrixOnTheFly;
-import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.data.IKnowledge;
 import edu.cmu.tetrad.graph.Graph;
 import edu.cmu.tetrad.graph.GraphUtils;
 import edu.cmu.tetrad.graph.Node;
 import edu.cmu.tetrad.graph.Triple;
-import edu.cmu.tetrad.search.*;
+import edu.cmu.tetrad.search.IndTestType;
+import edu.cmu.tetrad.search.IndependenceTest;
+import edu.cmu.tetrad.search.Mbfs;
+import edu.cmu.tetrad.search.SearchGraphUtils;
 import edu.cmu.tetrad.util.TetradSerializableUtils;
 
 import java.io.IOException;
@@ -143,26 +144,18 @@ public class MbfsRunner extends AbstractAlgorithmRunner implements
 	 * implemented in the extending class.
 	 */
 	public void execute() {
-//		int pcDepth = ((MbSearchParams) getParams()).getDepth();
-//		Mbfs mbfs = new Mbfs(getIndependenceTest(), pcDepth);
-//		SearchParams params = getParams();
-//		if (params instanceof MeekSearchParams) {
-//			mbfs.setAggressivelyPreventCycles(((MeekSearchParams) params)
-//					.isAggressivelyPreventCycles());
-//		}
+		int pcDepth = ((MbSearchParams) getParams()).getDepth();
+		Mbfs mbfs = new Mbfs(getIndependenceTest(), pcDepth);
+		SearchParams params = getParams();
+		if (params instanceof MeekSearchParams) {
+			mbfs.setAggressivelyPreventCycles(((MeekSearchParams) params)
+					.isAggressivelyPreventCycles());
+		}
 		IKnowledge knowledge = getParams().getKnowledge();
-//		mbfs.setKnowledge(knowledge);
+		mbfs.setKnowledge(knowledge);
 		String targetName = ((MbSearchParams) getParams()).getTargetName();
-//		Graph searchGraph = mbfs.search(targetName);
-//		setResultGraph(searchGraph);
-
-		DataSet dataSet = (DataSet) getDataModelList().get(0);
-
-        SemBicScore score = new SemBicScore(new CovarianceMatrixOnTheFly(dataSet));
-        score.setPenaltyDiscount(getParams().getIndTestParams().getAlpha());
-		FgsMb search = new FgsMb(score);
-        search.setFaithfulnessAssumed(true);
-		Graph searchGraph = search.search(dataSet.getVariable(targetName));
+		Graph searchGraph = mbfs.search(targetName);
+		setResultGraph(searchGraph);
 
         if (getSourceGraph() != null) {
             GraphUtils.arrangeBySourceGraph(searchGraph, getSourceGraph());
@@ -174,9 +167,7 @@ public class MbfsRunner extends AbstractAlgorithmRunner implements
             GraphUtils.circleLayout(searchGraph, 200, 200, 150);
         }
 
-//		this.mbfs = mbfs;
-
-        setResultGraph(searchGraph);
+		this.mbfs = mbfs;
 	}
 
 	public IndependenceTest getIndependenceTest() {

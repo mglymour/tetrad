@@ -38,7 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Runs several algorithms from Tetrad. Documentation is available
+ * Runs several algorithms from the moves line. Documentation is available
  * in the wiki of the Tetrad project on GitHub. This will be replaced by
  * the package tetrad-cli.
  *
@@ -64,7 +64,7 @@ public final class TetradCmd {
     private IKnowledge knowledge = new Knowledge2();
     private boolean whitespace = false;
     private boolean verbose = false;
-    private double samplePrior = 1.0;
+    private double samplePrior = 10.0;
     private double structurePrior = 1.0;
     private double penaltyDiscount = 1.0;
     private TestType testType = TestType.TETRAD_DELTA;
@@ -502,8 +502,8 @@ public final class TetradCmd {
             runCfci();
         } else if ("ccd".equalsIgnoreCase(algorithmName)) {
             runCcd();
-        } else if ("fgs".equalsIgnoreCase(algorithmName)) {
-            runFgs();
+        } else if ("ges".equalsIgnoreCase(algorithmName)) {
+            runGes();
         } else if ("bayes_est".equalsIgnoreCase(algorithmName)) {
             runBayesEst();
         } else if ("fofc".equalsIgnoreCase(algorithmName)) {
@@ -635,13 +635,13 @@ public final class TetradCmd {
         writeGraph(resultGraph);
     }
 
-    private void runFgs() {
+    private void runGes() {
         if (this.data == null && this.covarianceMatrix == null) {
             throw new IllegalStateException("Data did not load correctly.");
         }
 
         if (verbose) {
-            systemPrint("FGS");
+            systemPrint("GES");
             systemPrint(getKnowledge().toString());
             systemPrint(getVariables().toString());
 
@@ -657,29 +657,18 @@ public final class TetradCmd {
         Fgs fgs;
 
         if (useCovariance) {
-            SemBicScore fgsScore = new SemBicScore(covarianceMatrix);
-            fgsScore.setPenaltyDiscount(penaltyDiscount);
-            fgs = new Fgs(fgsScore);
-
+            fgs = new Fgs(new SemBicScore(covarianceMatrix, penaltyDiscount));
         } else {
-            if (data.isDiscrete()) {
-                BDeuScore score = new BDeuScore(data);
-                score.setSamplePrior(samplePrior);
-                score.setStructurePrior(structurePrior);
-
-                fgs = new Fgs(score);
-            } else if (data.isContinuous()) {
-                SemBicScore score = new SemBicScore(new CovarianceMatrixOnTheFly(data));
-                score.setPenaltyDiscount(penaltyDiscount);
-                fgs = new Fgs(score);
-            } else {
-                throw new IllegalArgumentException();
-            }
+            fgs = new Fgs(new SemBicScore(new CovarianceMatrixOnTheFly(data), penaltyDiscount));
         }
 
         if (initialGraph != null) {
             fgs.setInitialGraph(initialGraph);
         }
+
+        fgs.setPenaltyDiscount(penaltyDiscount);
+        fgs.setSamplePrior(samplePrior);
+        fgs.setStructurePrior(structurePrior);
 
         fgs.setKnowledge(getKnowledge());
 

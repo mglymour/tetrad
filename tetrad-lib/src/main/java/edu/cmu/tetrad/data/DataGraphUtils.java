@@ -22,10 +22,13 @@
 package edu.cmu.tetrad.data;
 
 import edu.cmu.tetrad.graph.*;
+import edu.cmu.tetrad.util.PointXy;
 import edu.cmu.tetrad.util.RandomUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 /**
  * Sundry graph utils that need to be located in the data package to
@@ -49,7 +52,7 @@ public class DataGraphUtils {
         do {
 //            dag = DataGraphUtils.randomGraphUniform(numStructuralNodes, numStructuralNodes, numStructuralEdges, 4, 3, 3, false);
             dag = GraphUtils.randomGraphRandomForwardEdges(vars, 0, numStructuralEdges,
-                    30, 15, 15, false, true);
+                    30, 15, 15, false);
         } while (dag.getNumEdges() != numStructuralEdges);
 
         Graph graph = new EdgeListGraph(dag);

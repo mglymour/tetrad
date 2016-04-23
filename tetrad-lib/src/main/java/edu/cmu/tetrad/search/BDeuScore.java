@@ -23,14 +23,17 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.Node;
+import edu.cmu.tetrad.util.MathUtils;
+import edu.cmu.tetrad.util.StatUtils;
 import org.apache.commons.math3.special.Gamma;
+import org.apache.commons.math3.util.FastMath;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * Calculates the BDeu score.
  */
-public class BDeuScore implements LocalDiscreteScore, IBDeuScore, Score {
+public class BDeuScore implements LocalDiscreteScore, IBDeuScore {
     private List<Node> variables;
     private int[][] data;
     private int sampleSize;
@@ -39,6 +42,8 @@ public class BDeuScore implements LocalDiscreteScore, IBDeuScore, Score {
     private double structurePrior = 1;
 
     private int[] numCategories;
+
+//    private double lastBumpThreshold = 0.0;
 
     public BDeuScore(DataSet dataSet) {
         if (dataSet == null) {
@@ -84,11 +89,16 @@ public class BDeuScore implements LocalDiscreteScore, IBDeuScore, Score {
         return (DiscreteVariable) variables.get(i);
     }
 
+//    Map<List<Integer>, Double> all = new HashMap<>();
+
     @Override
     public double localScore(int node, int parents[]) {
 
+//        Double _score = all.get(asList(node, parents));
+//        if (_score != null) return _score;
+
         // Number of categories for node.
-        int c = numCategories[node];
+        int r = numCategories[node];
 
         // Numbers of categories of parents.
         int[] dims = new int[parents.length];
@@ -98,15 +108,15 @@ public class BDeuScore implements LocalDiscreteScore, IBDeuScore, Score {
         }
 
         // Number of parent states.
-        int r = 1;
+        int q = 1;
 
         for (int p = 0; p < parents.length; p++) {
-            r *= dims[p];
+            q *= dims[p];
         }
 
         // Conditional cell coefs of data for node given parents(node).
-        int n_jk[][] = new int[r][c];
-        int n_j[] = new int[r];
+        int n_jk[][] = new int[q][r];
+        int n_j[] = new int[q];
 
         int[] parentValues = new int[parents.length];
 
@@ -139,39 +149,55 @@ public class BDeuScore implements LocalDiscreteScore, IBDeuScore, Score {
         //Finally, compute the score
         double score = 0.0;
 
+//        score += r * q * FastMath.log(getStructurePrior());
         score += getPriorForStructure(parents.length);
 
-        final double cellPrior = getSamplePrior() / (c * r);
-        final double rowPrior = getSamplePrior() / r;
+        final double cellPrior = getSamplePrior() / (r * q);
+        final double rowPrior = getSamplePrior() / q;
 
-        for (int j = 0; j < r; j++) {
+        for (int j = 0; j < q; j++) {
             score -= Gamma.logGamma(rowPrior + n_j[j]);
 
-            for (int k = 0; k < c; k++) {
+            for (int k = 0; k < r; k++) {
                 score += Gamma.logGamma(cellPrior + n_jk[j][k]);
             }
         }
 
-        score += r * Gamma.logGamma(rowPrior);
-        score -= c * r * Gamma.logGamma(cellPrior);
+        score += q * Gamma.logGamma(rowPrior);
+        score -= r * q * Gamma.logGamma(cellPrior);
+
+//        if (parents.length <= 1) {
+//            all.put(asList(node, parents), score);
+//        }
 
         return score;
     }
 
+    private List<Integer> asList(int node, int[] parents) {
+        List<Integer> list = new ArrayList<>();
+        list.add(node);
+        for (int i : parents) list.add(i);
+        return list;
+    }
+
+    // Greg's structure prior
     private double getPriorForStructure(int numParents) {
         double e = getStructurePrior();
+        int k = numParents;
         int vm = data.length - 1;
-        return numParents * Math.log(e / (vm)) + (vm - numParents) * Math.log(1.0 - (e / (vm)));
+        return Math.log(e / (vm)) + (vm - k) * Math.log(1.0 - (e / (vm)));
+    }
+
+    private double getPriorForStructure2(int numParents) {
+        double e = getStructurePrior();
+        int k = numParents;
+        int vm = data.length - 1;
+        return MathUtils.logChoose(vm, k) + (k * Math.log(e / (vm)) * (vm - k)) * Math.log(1.0 - e / (vm));
     }
 
     @Override
     public double localScoreDiff(int x, int y, int[] z) {
         return localScore(y, append(z, x)) - localScore(y, z);
-    }
-
-    @Override
-    public double localScoreDiff(int x, int y) {
-        return localScore(y, x) - localScore(y);
     }
 
     int[] append(int[] parents, int extra) {
@@ -183,12 +209,95 @@ public class BDeuScore implements LocalDiscreteScore, IBDeuScore, Score {
 
     @Override
     public double localScore(int node, int parent) {
-        return localScore(node, new int[]{parent});
+        if (true) return localScore(node, new int[]{parent});
+
+        // Number of categories for node.
+        int r = numCategories[node];
+
+        // Numbers of categories of parents.
+        int q = numCategories[parent];
+
+        // Conditional cell coefs of data for node given parents(node).
+        int n_jk[][] = new int[q][r];
+        int n_j[] = new int[q];
+
+        int[] parentData = data[parent];
+        int[] childData = data[node];
+
+        for (int i = 0; i < sampleSize; i++) {
+            int parentValue = parentData[i];
+            int childValue = childData[i];
+            n_jk[parentValue][childValue]++;
+            n_j[parentValue]++;
+        }
+
+        //Finally, compute the score
+        double score = 0.0;
+
+//        score += (r) * q * FastMath.log(getStructurePrior());
+
+        score += getPriorForStructure(1);
+
+        final double cellPrior = getSamplePrior() / (r * q);
+        final double rowPrior = getSamplePrior() / q;
+
+        for (int j = 0; j < q; j++) {
+            score -= Gamma.logGamma(rowPrior + n_j[j]);
+
+            for (int k = 0; k < r; k++) {
+                score += Gamma.logGamma(cellPrior + n_jk[j][k]);
+            }
+        }
+
+        score += q * Gamma.logGamma(rowPrior);
+        score -= r * q * Gamma.logGamma(cellPrior);
+
+//        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
+
+        return score;
     }
 
     @Override
     public double localScore(int node) {
-        return localScore(node, new int[0]);
+        if (true) return localScore(node, new int[0]);
+
+        // Number of categories for node.
+        int r = numCategories[node];
+
+        // Conditional cell coefs of data for node given parents(node).
+        int n_jk[] = new int[numCategories[node]];
+        int n_j = 0;
+
+        int[] childData = data[node];
+
+        for (int i = 0; i < sampleSize; i++) {
+            int childValue = childData[i];
+            n_jk[childValue]++;
+            n_j++;
+        }
+
+        //Finally, compute the score
+        double score = 0.0;
+
+//        score += (r) * q * FastMath.log(getStructurePrior());
+
+        score += getPriorForStructure(0);
+
+        final double cellPrior = getSamplePrior() / r;
+        final double rowPrior = getSamplePrior();
+
+        score -= Gamma.logGamma(rowPrior + n_j);
+
+        for (int k = 0; k < r; k++) {
+            score += Gamma.logGamma(cellPrior + n_jk[k]);
+        }
+
+        score += Gamma.logGamma(rowPrior);
+        score -= r * Gamma.logGamma(cellPrior);
+
+//        lastBumpThreshold = 0.01;//((r - 1) * q * FastMath.log(getStructurePrior()));
+
+        return score;
     }
 
     @Override
@@ -265,16 +374,6 @@ public class BDeuScore implements LocalDiscreteScore, IBDeuScore, Score {
         }
 
         this.variables = variables;
-    }
-
-    public Node getVariable(String targetName) {
-        for (Node node : variables) {
-            if (node.getName().equals(targetName)) {
-                return node;
-            }
-        }
-
-        return null;
     }
 }
 

@@ -39,7 +39,7 @@ import java.util.List;
  *
  * @author Joseph Ramsey
  */
-public class SemBicScoreImages implements ISemBicScore, Score {
+public class SemBicScoreImages implements ISemBicScore {
 
     // The covariance matrix.
     private List<SemBicScore> semBicScores;
@@ -80,13 +80,9 @@ public class SemBicScoreImages implements ISemBicScore, Score {
                     throw new IllegalArgumentException("Datasets must be continuous.");
                 }
 
-                SemBicScore semBicScore = new SemBicScore(new CovarianceMatrixOnTheFly(dataSet));
-                semBicScore.setPenaltyDiscount(penaltyDiscount);
-                semBicScores.add(semBicScore);
+                semBicScores.add(new SemBicScore(new CovarianceMatrixOnTheFly(dataSet), penaltyDiscount));
             } else if (model instanceof ICovarianceMatrix) {
-                SemBicScore semBicScore = new SemBicScore((ICovarianceMatrix) model);
-                semBicScore.setPenaltyDiscount(penaltyDiscount);
-                semBicScores.add(semBicScore);
+                semBicScores.add(new SemBicScore((ICovarianceMatrix) model, penaltyDiscount));
             } else {
                 throw new IllegalArgumentException("Only continuous data sets and covariance matrices may be used as input.");
             }
@@ -116,27 +112,17 @@ public class SemBicScoreImages implements ISemBicScore, Score {
         return sum / semBicScores.size();
     }
 
-    @Override
-    public double localScoreDiff(int x, int y) {
-        return localScoreDiff(x, y, new int[0]);
-    }
-
     /**
      * Calculates the sample likelihood and BIC score for i given its parents in a simple SEM model
      */
     public double localScore(int i, int[] parents) {
         double sum = 0.0;
-        int count = 0;
 
         for (SemBicScore score : semBicScores) {
-            double _score = score.localScore(i, parents);
-
-            if (!Double.isNaN(_score)) {
-                sum += _score;
-            }
+            sum += score.localScore(i, parents);
         }
 
-        return sum / count;
+        return sum / semBicScores.size();
     }
 
     public double localScore(int i, int[] parents, int index) {
@@ -278,17 +264,6 @@ public class SemBicScoreImages implements ISemBicScore, Score {
                 out.println("### Linear dependence among variables: " + _sel);
             }
         }
-    }
-
-    @Override
-    public Node getVariable(String targetName) {
-        for (Node node : variables) {
-            if (node.getName().equals(targetName)) {
-                return node;
-            }
-        }
-
-        return null;
     }
 }
 

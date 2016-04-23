@@ -396,7 +396,7 @@ public class TestMarkovBlanketSearches {
 //                fpSum += stats.getFp();
 //                fnSum += stats.getFn();
 //                errorsSum += stats.getErrors();
-//                truthSum += stats.getTrueDag();
+//                truthSum += stats.getTruth();
 //                timeSum += stats.getTime();
 //                n++;
 //            }
@@ -761,7 +761,7 @@ public class TestMarkovBlanketSearches {
 //            return errors;
 //        }
 //
-//        public int getTrueDag() {
+//        public int getTruth() {
 //            return truth;
 //        }
 //

@@ -102,7 +102,7 @@ public final class IndTestFisherZ implements IndependenceTest {
             throw new IllegalArgumentException("Alpha mut be in [0, 1]");
         }
 
-        this.covMatrix = new CovarianceMatrixOnTheFly(dataSet);
+        this.covMatrix = new CovarianceMatrix(dataSet);
         List<Node> nodes = covMatrix.getVariables();
 
         this.variables = Collections.unmodifiableList(nodes);
@@ -224,15 +224,8 @@ public final class IndTestFisherZ implements IndependenceTest {
     }
 
     private double partialCorrelation(Node x, Node y, List<Node> z) {
-        int[] indices = new int[z.size() + 2];
-        indices[0] = indexMap.get(x);
-        indices[1] = indexMap.get(y);
-        for (int i = 0; i < z.size(); i++) indices[i + 2] = indexMap.get(z.get(i));
-        TetradMatrix submatrix = covMatrix.getSubmatrix(indices).getMatrix();
-//        TetradMatrix submatrix = DataUtils.subMatrix(covMatrix, indexMap, x, y, z);
+        TetradMatrix submatrix = DataUtils.subMatrix(covMatrix, indexMap, x, y, z);
         return StatUtils.partialCorrelation(submatrix);
-
-
     }
 
     public boolean isIndependent(Node x, Node y, Node... z) {

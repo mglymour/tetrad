@@ -256,15 +256,9 @@ public class SepsetsMaxPValuePossDsep implements SepsetProducer {
         return independenceTest.isIndependent(a, b, c);
     }
 
-
-    @Override
-    public double getPValue() {
-        return p;
-    }
-
     @Override
     public double getScore() {
-        return -(p - independenceTest.getAlpha());
+        return p;
     }
 
     @Override

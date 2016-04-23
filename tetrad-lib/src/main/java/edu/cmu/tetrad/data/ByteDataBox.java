@@ -31,7 +31,7 @@ public class ByteDataBox implements DataBox {
     /**
      * The stored byte data.
      */
-    private final byte[][] data;
+    private byte[][] data;
 
     /**
      * Constructs an 2D byte array consisting entirely of missing values (-99).
@@ -88,13 +88,9 @@ public class ByteDataBox implements DataBox {
      */
     public void set(int row, int col, Number value) {
         if (value == null) {
-            synchronized (data) {
-                data[row][col] = -99;
-            }
+            data[row][col] = -99;
         } else {
-            synchronized (data) {
-                data[row][col] = value.byteValue();
-            }
+            data[row][col] = value.byteValue();
         }
     }
 

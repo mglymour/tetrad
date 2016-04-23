@@ -808,7 +808,11 @@ public class Ling {
         TetradMatrix mat = ica_W.transpose();
         //returns all zeroless-diagonal column-permutations
 
+        System.out.println("AAA");
+
         List<List<Integer>> nRookAssignments = nRookColumnAssignments(mat, makeAllRows(mat.rows()));
+
+        System.out.println("BBB");
 
         //for each assignment, add the corresponding permutation to 'permutations'
         for (List<Integer> permutation : nRookAssignments) {
@@ -816,6 +820,8 @@ public class Ling {
             PermutationMatrixPair permTetradMatrixPair = new PermutationMatrixPair(permutation, matrixW);
             permutations.add(permTetradMatrixPair);
         }
+
+        System.out.println("CCC");
 
         return permutations;
     }
@@ -848,7 +854,11 @@ public class Ling {
 //        TetradMatrix mat = ica_W.transpose();
 //        //returns all zeroless-diagonal column-permutations
 //
+//        System.out.println("AAA");
+//
 //        List<List<Integer>> nRookAssignments = nRookColumnAssignments(mat, makeAllRows(mat.rows()));
+//
+//        System.out.println("BBB");
 //
 //        //for each assignment, add the corresponding permutation to 'permutations'
 //        for (List<Integer> permutation : nRookAssignments) {
@@ -856,6 +866,8 @@ public class Ling {
 //            PermutationMatrixPair  permTetradMatrixPair = new PermutationMatrixPair (permutation, matrixW, vars);
 //            permutations.add(permTetradMatrixPair);
 //        }
+//
+//        System.out.println("CCC");
 
         return permutations;
     }

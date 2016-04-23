@@ -28,13 +28,15 @@ import edu.cmu.tetrad.search.IndTestDSep;
 import edu.cmu.tetrad.search.IndependenceTest;
 import edu.cmu.tetrad.session.SessionModel;
 import edu.cmu.tetrad.session.SimulationParamsSource;
-import edu.cmu.tetrad.util.RandomUtil;
 import edu.cmu.tetrad.util.TetradLogger;
 import edu.cmu.tetrad.util.TetradSerializableUtils;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.prefs.Preferences;
 
 /**
@@ -73,7 +75,6 @@ public class DagWrapper implements SessionModel, GraphSource, KnowledgeBoxInput,
         if (Preferences.userRoot().getInt("newGraphInitializationMode", GraphParams.MANUAL) == GraphParams.MANUAL) {
             dag = new Dag();
         } else if (Preferences.userRoot().getInt("newGraphInitializationMode", GraphParams.MANUAL) == GraphParams.RANDOM) {
-            RandomUtil.getInstance().setSeed(new Date().getTime());
             this.dag = new Dag(edu.cmu.tetradapp.util.GraphUtils.makeRandomGraph(getGraph()));
         }
         log();
@@ -91,8 +92,6 @@ public class DagWrapper implements SessionModel, GraphSource, KnowledgeBoxInput,
 //            }
         } else if (Preferences.userRoot().getInt("newGraphInitializationMode",
                 GraphParams.MANUAL) == GraphParams.RANDOM) {
-            RandomUtil.getInstance().setSeed(new Date().getTime());
-
             this.dag = new Dag(edu.cmu.tetradapp.util.GraphUtils.makeRandomGraph(getGraph()));
         }
         log();
@@ -103,7 +102,6 @@ public class DagWrapper implements SessionModel, GraphSource, KnowledgeBoxInput,
 //            this.dag = new Dag(graphWrapper.getSemGraph());
             this.dag = new Dag();
         } else if (Preferences.userRoot().getInt("newGraphInitializationMode", GraphParams.MANUAL) == GraphParams.RANDOM) {
-            RandomUtil.getInstance().setSeed(new Date().getTime());
             this.dag = new Dag(edu.cmu.tetradapp.util.GraphUtils.makeRandomGraph(getGraph()));
         }
         log();

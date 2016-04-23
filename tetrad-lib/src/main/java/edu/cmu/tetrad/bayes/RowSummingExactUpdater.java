@@ -162,7 +162,7 @@ public final class RowSummingExactUpdater implements ManipulatingBayesUpdater {
 
         this.evidence = evidence;
 
-        Graph graph = bayesIm.getBayesPm().getDag();
+        Dag graph = bayesIm.getBayesPm().getDag();
         Dag manipulatedGraph = createManipulatedGraph(graph);
         BayesPm manipulatedPm = createUpdatedBayesPm(manipulatedGraph);
 
