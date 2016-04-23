@@ -23,16 +23,14 @@ package edu.cmu.tetrad.search;
 
 import edu.cmu.tetrad.data.*;
 import edu.cmu.tetrad.graph.*;
-import edu.cmu.tetrad.util.ChoiceGenerator;
-import edu.cmu.tetrad.util.CombinationGenerator;
-import edu.cmu.tetrad.util.StatUtils;
-import edu.cmu.tetrad.util.TetradLogger;
+import edu.cmu.tetrad.util.*;
 import org.apache.commons.collections4.map.MultiKeyMap;
 
 import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.concurrent.RecursiveTask;
 
 /**
  * Graph utilities for search algorithms. Lots of orientation method, for instance.
@@ -1372,7 +1370,7 @@ public final class SearchGraphUtils {
      */
     public static Graph patternFromDag(Graph dag) {
 //        IndTestDSep test = new IndTestDSep(dag);
-//        return new Pc(test).search();
+//        return new PC(test).search();
 //
         Graph graph = new EdgeListGraph(dag);
         SearchGraphUtils.basicPattern(graph, false);
@@ -2133,13 +2131,13 @@ public final class SearchGraphUtils {
 
     public static Graph patternForDag(final Graph dag) {
 //        IndTestDSep test = new IndTestDSep(dag);
-//        return new Pc(test).search();
+//        return new PC(test).search();
 //
-        Graph pattern = new EdgeListGraph(dag);
+        Graph pattern = new EdgeListGraphSingleConnections(dag);
         SearchGraphUtils.basicPattern(pattern, false);
         MeekRules rules = new MeekRules();
         rules.orientImplied(pattern);
-        GraphUtils.replaceNodes(pattern, dag.getNodes());
+//        GraphUtils.replaceNodes(pattern, dag.getNodes());
         return pattern;
     }
 
@@ -2340,7 +2338,7 @@ public final class SearchGraphUtils {
         List<Node> estLatents = estGraph.getNodes();
 
 //        List<Node> trueLatents = GraphUtils.getLatents(trueGraph);
-//        List<Node> estLatents = GraphUtils.getLatents(estGraph);
+//        List<Node> estLatents = GraphUtils.getLatents(graph);
 
         Graph u = trueGraph.subgraph(trueLatents);
         Graph t = estGraph.subgraph(estLatents);
@@ -2484,11 +2482,14 @@ public final class SearchGraphUtils {
 
         int shd = structuralHammingDistance(trueGraph, graph);
 
+        int[][] counts = graphComparison(graph, trueGraph, null);
+
         return new GraphUtils.GraphComparison(
                 adjFn, adjFp, adjCorrect, arrowptFn, arrowptFp, arrowptCorrect,
                 adjPrec, adjRec, arrowptPrec, arrowptRec, shd,
                 twoCycleCorrect, twoCycleFn, twoCycleFp,
-                edgesAdded, edgesRemoved, edgesReorientedFrom, edgesReorientedTo);
+                edgesAdded, edgesRemoved, edgesReorientedFrom, edgesReorientedTo,
+                counts);
     }
 
     /**
@@ -2611,12 +2612,17 @@ public final class SearchGraphUtils {
 
         int shd = structuralHammingDistance(trueGraph, graph);
 
+        graph = GraphUtils.replaceNodes(graph, trueGraph.getNodes());
+
+        int[][] counts = GraphUtils.edgeMisclassificationCounts(trueGraph, graph, false);
+
         return new GraphUtils.GraphComparison(
                 adjFn, adjFp, adjCorrect, arrowptFn, arrowptFp, arrowptCorrect,
                 adjPrec, adjRec, arrowptPrec, arrowptRec,
                 shd,
                 twoCycleErrors.twoCycCor, twoCycleErrors.twoCycFn, twoCycleErrors.twoCycFp,
-                edgesAdded, edgesRemoved, edgesReorientedFrom, edgesReorientedTo);
+                edgesAdded, edgesRemoved, edgesReorientedFrom, edgesReorientedTo,
+                counts);
     }
 
     /**
@@ -2738,13 +2744,14 @@ public final class SearchGraphUtils {
         double arrowptPrec = (double) arrowptCorrect / (arrowptCorrect + arrowptFp);
         double arrowptRec = (double) arrowptCorrect / (arrowptCorrect + arrowptFn);
 
+        int[][] counts = graphComparison(graph, trueGraph, null);
 
         return new GraphUtils.GraphComparison(
                 adjFn, adjFp, adjCorrect, arrowptFn, arrowptFp, arrowptCorrect,
                 adjPrec, adjRec, arrowptPrec, arrowptRec,
                 shd,
                 twoCycleErrors.twoCycCor, twoCycleErrors.twoCycFn, twoCycleErrors.twoCycFp,
-                edgesAdded, edgesRemoved, edgesReorientedFrom, edgesReorientedTo);
+                edgesAdded, edgesRemoved, edgesReorientedFrom, edgesReorientedTo, counts);
     }
 
     /**
@@ -2866,13 +2873,14 @@ public final class SearchGraphUtils {
         double arrowptPrec = (double) arrowptCorrect / (arrowptCorrect + arrowptFp);
         double arrowptRec = (double) arrowptCorrect / (arrowptCorrect + arrowptFn);
 
+        int[][] counts = graphComparison(graph, trueGraph, null);
 
         return new GraphUtils.GraphComparison(
                 adjFn, adjFp, adjCorrect, arrowptFn, arrowptFp, arrowptCorrect,
                 adjPrec, adjRec, arrowptPrec, arrowptRec,
                 shd,
                 twoCycleErrors.twoCycCor, twoCycleErrors.twoCycFn, twoCycleErrors.twoCycFp,
-                edgesAdded, edgesRemoved, edgesReorientedFrom, edgesReorientedTo);
+                edgesAdded, edgesRemoved, edgesReorientedFrom, edgesReorientedTo, counts);
     }
 
     public static int structuralHammingDistance3(Graph trueGraph, Graph estGraph) {
@@ -2897,6 +2905,43 @@ public final class SearchGraphUtils {
             }
         }
         return error;
+    }
+
+
+    private static class AhdCounts {
+        private int ahdFp = 0;
+        private int ahdFn = 0;
+        private int ahdCorrect = 0;
+
+        public void incrementFp() {
+            ahdFp++;
+        }
+
+        public void incrementFn() {
+            ahdFn++;
+        }
+
+        public void incrementCorrect() {
+            ahdCorrect++;
+        }
+
+        public void addAll(AhdCounts ahdCounts2) {
+            ahdFp += ahdCounts2.getAhdFp();
+            ahdFn += ahdCounts2.getAhdFn();
+            ahdCorrect += ahdCounts2.getAhdCorrect();
+        }
+
+        public int getAhdFp() {
+            return ahdFp;
+        }
+
+        public int getAhdFn() {
+            return ahdFn;
+        }
+
+        public int getAhdCorrect() {
+            return ahdCorrect;
+        }
     }
 
     private static int structuralHammingDistanceOneEdge3(Edge e1, Edge e2) {
@@ -3030,25 +3075,27 @@ public final class SearchGraphUtils {
     }
 
     public static int[][] graphComparison(Graph estPattern, Graph truePattern, PrintStream out) {
-        GraphUtils.GraphComparison comparison = getGraphComparison(estPattern, truePattern);
+        GraphUtils.GraphComparison comparison = getGraphComparison2(estPattern, truePattern);
 
         if (out != null) {
             out.println("Adjacencies:");
         }
 
-        int adjTp = comparison.getAdjCorrect();
+        int adjTp = comparison.getAdjCor();
         int adjFp = comparison.getAdjFp();
         int adjFn = comparison.getAdjFn();
 
-        int arrowptTp = comparison.getArrowptCorrect();
-        int arrowptFp = comparison.getArrowptFp();
-        int arrowptFn = comparison.getArrowptFn();
+        int arrowptTp = comparison.getAhdCor();
+        int arrowptFp = comparison.getAhdFp();
+        int arrowptFn = comparison.getAhdFn();
 
         if (out != null) {
             out.println("TP " + adjTp + " FP = " + adjFp + " FN = " + adjFn);
             out.println("Arrow Orientations:");
             out.println("TP " + arrowptTp + " FP = " + arrowptFp + " FN = " + arrowptFn);
         }
+
+        estPattern = GraphUtils.replaceNodes(estPattern, truePattern.getNodes());
 
         int[][] counts = GraphUtils.edgeMisclassificationCounts(truePattern, estPattern, false);
 
@@ -3067,9 +3114,9 @@ public final class SearchGraphUtils {
 
         if (out != null) {
             out.println();
-            out.println("AREC\tAPRE\tOREC\tOPRE");
-            out.println(nf.format(adjRecall * 100) + "%\t" + nf.format(adjPrecision * 100)
-                    + "%\t" + nf.format(arrowRecall * 100) + "%\t" + nf.format(arrowPrecision * 100) + "%");
+            out.println("APRE\tAREC\tOPRE\tOREC");
+            out.println(nf.format(adjPrecision * 100) + "%\t" + nf.format(adjRecall * 100)
+                    + "%\t" + nf.format(arrowPrecision * 100) + "%\t" + nf.format(arrowRecall * 100) + "%");
             out.println();
         }
 
@@ -3129,7 +3176,7 @@ public final class SearchGraphUtils {
 
 
             for (DataModel _dataModel : list) {
-                dataSets.add((DataSet) _dataModel);
+                dataSets.add(_dataModel);
             }
 
             Fgs images = new Fgs(new SemBicScoreImages(dataSets));
@@ -3140,15 +3187,26 @@ public final class SearchGraphUtils {
         } else if (dataModel instanceof DataSet) {
             DataSet dataSet = (DataSet) dataModel;
 
-            Fgs ges = new Fgs(dataSet);
+            Score score;
+
+            if (((DataSet) dataModel).isContinuous()) {
+                score = new SemBicScore(new CovarianceMatrixOnTheFly(dataSet));
+            } else if (dataSet.isDiscrete()) {
+                score = new BDeuScore(dataSet);
+            } else {
+                throw new NullPointerException();
+            }
+
+            Fgs ges = new Fgs(score);
 
             ges.setBoundGraph(graph);
             ges.setKnowledge(knowledge);
             return ges.search();
         } else if (dataModel instanceof CovarianceMatrix) {
             ICovarianceMatrix cov = (CovarianceMatrix) dataModel;
+            Score score = new SemBicScore(cov);
 
-            Fgs ges = new Fgs(cov);
+            Fgs ges = new Fgs(score);
 
             ges.setBoundGraph(graph);
             ges.setKnowledge(knowledge);

@@ -32,7 +32,7 @@ public class VerticalDoubleDataBox implements DataBox {
     /**
      * The stored double data.
      */
-    private double[][] data;
+    private final double[][] data;
 
     /**
      * Constructs an 2D double array consisting entirely of missing values
@@ -90,9 +90,13 @@ public class VerticalDoubleDataBox implements DataBox {
      */
     public void set(int row, int col, Number value) {
         if (value == null) {
-            data[col][row] = Double.NaN;
+            synchronized (data[col]) {
+                data[col][row] = Double.NaN;
+            }
         } else {
-            data[col][row] = value.doubleValue();
+            synchronized (data[col]) {
+                data[col][row] = value.doubleValue();
+            }
         }
     }
 
@@ -101,13 +105,7 @@ public class VerticalDoubleDataBox implements DataBox {
      * is missing (-99), null, is returned.
      */
     public Number get(int row, int col) {
-        double datum = data[col][row];
-
-        if (Double.isNaN(datum)) {
-            return null;
-        } else {
-            return datum;
-        }
+        return data[col][row];
     }
 
     public double[][] getVariableVectors() {
@@ -118,15 +116,13 @@ public class VerticalDoubleDataBox implements DataBox {
      * @return a copy of this data box.
      */
     public DataBox copy() {
-        VerticalDoubleDataBox box = new VerticalDoubleDataBox(numRows(), numCols());
+        double[][] copy = new double[data.length][data[0].length];
 
-        for (int i = 0; i < numRows(); i++) {
-            for (int j = 0; j < numCols(); j++) {
-                box.set(i, j, get(i, j));
-            }
+        for (int i = 0; i < data.length; i++) {
+            System.arraycopy(data[i], 0, copy[i], 0, data[0].length);
         }
 
-        return box;
+        return new VerticalDoubleDataBox(data);
     }
 
     /**
