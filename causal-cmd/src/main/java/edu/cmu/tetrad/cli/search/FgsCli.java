@@ -18,7 +18,9 @@
  */
 package edu.cmu.tetrad.cli.search;
 
+import edu.cmu.tetrad.io.DataReader;
 import edu.cmu.tetrad.cli.data.IKnowledgeFactory;
+import edu.cmu.tetrad.io.TabularContinuousDataReader;
 import edu.cmu.tetrad.cli.util.Args;
 import edu.cmu.tetrad.cli.util.DateTime;
 import edu.cmu.tetrad.cli.util.FileIO;
@@ -31,8 +33,6 @@ import edu.cmu.tetrad.cli.validation.UniqueVariableNames;
 import edu.cmu.tetrad.data.CovarianceMatrixOnTheFly;
 import edu.cmu.tetrad.data.DataSet;
 import edu.cmu.tetrad.graph.Graph;
-import edu.cmu.tetrad.io.DataReader;
-import edu.cmu.tetrad.io.TabularContinuousDataReader;
 import edu.cmu.tetrad.search.Fgs;
 import edu.cmu.tetrad.search.SemBicScore;
 import edu.cmu.tetrad.util.DataUtility;
@@ -300,7 +300,6 @@ public class FgsCli {
         LOGGER.info(String.format("Runtime Parameters: number of threads=%,d,verbose=%s", numOfThreads, verbose));
 
         writer.println("Algorithm Parameters:");
-        writer.println("algorithm type = fgs");
         writer.printf("penalty discount = %f%n", penaltyDiscount);
         writer.printf("depth = %s%n", depth);
         writer.printf("faithfulness = %s%n", faithfulness);
