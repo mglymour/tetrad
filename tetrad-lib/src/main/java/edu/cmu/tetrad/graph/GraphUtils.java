@@ -21,16 +21,14 @@
 
 package edu.cmu.tetrad.graph;
 
-import edu.cmu.tetrad.util.ChoiceGenerator;
-import edu.cmu.tetrad.util.PointXy;
-import edu.cmu.tetrad.util.RandomUtil;
-import edu.cmu.tetrad.util.TextTable;
+import edu.cmu.tetrad.util.*;
 import nu.xom.*;
 
 import java.io.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.concurrent.RecursiveTask;
 import java.util.regex.Matcher;
 
 /**
@@ -165,7 +163,7 @@ public final class GraphUtils {
         // It is still unclear whether we should use the random forward edges method or the
         // random uniform method to create random DAGs, hence this method.
         // jdramsey 12/8/2015
-        return randomGraphRandomForwardEdges(nodes, numLatentConfounders, maxNumEdges, maxDegree, maxIndegree, maxOutdegree, connected);
+        return randomGraphRandomForwardEdges(nodes, numLatentConfounders, maxNumEdges, maxDegree, maxIndegree, maxOutdegree, connected, true);
 //        return randomGraphUniform(nodes, numLatentConfounders, maxNumEdges, maxDegree, maxIndegree, maxOutdegree, connected);
     }
 
@@ -267,6 +265,14 @@ public final class GraphUtils {
     public static Graph randomGraphRandomForwardEdges(List<Node> nodes, int numLatentConfounders,
                                                       int numEdges, int maxDegree,
                                                       int maxIndegree, int maxOutdegree, boolean connected) {
+        return randomGraphRandomForwardEdges(nodes, numLatentConfounders, numEdges, maxDegree, maxIndegree,
+                maxOutdegree, connected, true);
+    }
+
+    public static Graph randomGraphRandomForwardEdges(List<Node> nodes, int numLatentConfounders,
+                                                      int numEdges, int maxDegree,
+                                                      int maxIndegree, int maxOutdegree, boolean connected,
+                                                      boolean layoutAsCircle) {
         if (nodes.size() <= 0) {
             throw new IllegalArgumentException(
                     "NumNodes most be > 0: " + nodes.size());
@@ -298,6 +304,9 @@ public final class GraphUtils {
         boolean added = false;
 
         for (int i = 0; i < numEdges; i++) {
+
+            if ((i + 1) % 1000 == 0) System.out.println("# edges = " + (i + 1));
+
             int c1 = RandomUtil.getInstance().nextInt(nodes2.size());
             int c2 = RandomUtil.getInstance().nextInt(nodes2.size());
 
@@ -356,7 +365,9 @@ public final class GraphUtils {
 
         fixLatents4(numLatentConfounders, dag);
 
-        GraphUtils.circleLayout(dag, 200, 200, 150);
+        if (layoutAsCircle) {
+            GraphUtils.circleLayout(dag, 200, 200, 150);
+        }
 
         return dag;
     }
@@ -615,6 +626,8 @@ public final class GraphUtils {
 
     // JMO's method for fixing latents
     private static void fixLatents4(int numLatentConfounders, Graph graph) {
+        if (numLatentConfounders == 0) return;
+
         List<Node> commonCausesAndEffects = getCommonCausesAndEffects(graph);
         int index = 0;
 
@@ -1060,6 +1073,8 @@ public final class GraphUtils {
      */
     private static void collectComponentVisit(Node node, Set<Node> component,
                                               Graph graph, List<Node> unsortedNodes) {
+        if (TaskManager.getInstance().isCanceled()) return;
+
         component.add(node);
         unsortedNodes.remove(node);
         List<Node> adj = graph.getAdjacentNodes(node);
@@ -2275,7 +2290,7 @@ public final class GraphUtils {
     }
 
     public static Graph readerToGraphTxt(String graphString) throws IOException {
-       return readerToGraphTxt(new CharArrayReader(graphString.toCharArray()));
+        return readerToGraphTxt(new CharArrayReader(graphString.toCharArray()));
     }
 
     public static Graph readerToGraphTxt(Reader reader) throws IOException {
@@ -2762,7 +2777,7 @@ public final class GraphUtils {
         int maxDegree = 0;
 
         for (Node node : graph.getNodes()) {
-            int n = graph.getAdjacentNodes(node).size();
+            int n = graph.getEdges(node).size();
             if (n > maxDegree) maxDegree = n;
         }
 
@@ -2894,7 +2909,6 @@ public final class GraphUtils {
     }
 
 
-
     private static StringBuilder directedEdges(List<Graph> directedGraphs) {
         Set<Edge> directedEdgesSet = new HashSet<>();
 
@@ -3015,6 +3029,56 @@ public final class GraphUtils {
         return true;
     }
 
+    public static String edgeMisclassifications(double[][] counts, NumberFormat nf) {
+        StringBuilder builder = new StringBuilder();
+
+        TextTable table2 = new TextTable(9, 7);
+
+        table2.setToken(1, 0, "---");
+        table2.setToken(2, 0, "o-o");
+        table2.setToken(3, 0, "o->");
+        table2.setToken(4, 0, "<-o");
+        table2.setToken(5, 0, "-->");
+        table2.setToken(6, 0, "<--");
+        table2.setToken(7, 0, "<->");
+        table2.setToken(8, 0, "No Edge");
+        table2.setToken(0, 1, "---");
+        table2.setToken(0, 2, "o-o");
+        table2.setToken(0, 3, "o->");
+        table2.setToken(0, 4, "-->");
+        table2.setToken(0, 5, "<->");
+        table2.setToken(0, 6, "No Edge");
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 6; j++) {
+                if (i == 7 && j == 5) table2.setToken(i + 1, j + 1, "*");
+                else
+                    table2.setToken(i + 1, j + 1, "" + nf.format(counts[i][j]));
+            }
+        }
+
+        builder.append(table2.toString());
+
+        double correctEdges = 0;
+        double estimatedEdges = 0;
+
+        for (int i = 0; i < counts.length; i++) {
+            for (int j = 0; j < counts[0].length - 1; j++) {
+                if ((i == 0 && j == 0) || (i == 1 && j == 1) || (i == 2 && j == 2) || (i == 4 && j == 3) || (i == 6 && j == 4)) {
+                    correctEdges += counts[i][j];
+                }
+
+                estimatedEdges += counts[i][j];
+            }
+        }
+
+        NumberFormat nf2 = new DecimalFormat("0.00");
+
+        builder.append("\nRatio correct edges to estimated edges = ").append(nf2.format((correctEdges / (double) estimatedEdges)));
+
+        return builder.toString();
+    }
+
     public static String edgeMisclassifications(int[][] counts) {
         StringBuilder builder = new StringBuilder();
 
@@ -3058,14 +3122,14 @@ public final class GraphUtils {
             }
         }
 
-        NumberFormat nf = new DecimalFormat("0.00");
+        NumberFormat nf2 = new DecimalFormat("0.00");
 
-        builder.append("\nRatio correct edges to estimated edges = ").append(nf.format((correctEdges / (double) estimatedEdges)));
+        builder.append("\nRatio correct edges to estimated edges = ").append(nf2.format((correctEdges / (double) estimatedEdges)));
 
         return builder.toString();
     }
 
-    public static int[][] edgeMisclassificationCounts(Graph leftGraph, Graph topGraph, boolean print) {
+    public static int[][] edgeMisclassificationCounts1(Graph leftGraph, Graph topGraph, boolean print) {
         topGraph = replaceNodes(topGraph, leftGraph.getNodes());
 
         int[][] counts = new int[8][6];
@@ -3098,6 +3162,138 @@ public final class GraphUtils {
         }
 
         return counts;
+    }
+
+
+private static class Counts {
+    private int[][] counts;
+
+    public Counts() {
+        this.counts = new int[8][6];
+    }
+
+    public void increment(int m, int n) {
+        this.counts[m][n]++;
+    }
+
+    public int getCount(int m, int n) {
+        return this.counts[m][n];
+    }
+
+    public void addAll(Counts counts2) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 6; j++) {
+                counts[i][j] += counts2.getCount(i, j);
+            }
+        }
+    }
+
+    public int[][] countArray() {
+        return counts;
+    }
+}
+
+    public static int[][] edgeMisclassificationCounts(Graph leftGraph, Graph topGraph, boolean print) {
+//        topGraph = GraphUtils.replaceNodes(topGraph, leftGraph.getNodes());
+
+        class CountTask extends RecursiveTask<Counts> {
+            private int chunk;
+            private int from;
+            private int to;
+            private final List<Edge> edges;
+            private final Graph leftGraph;
+            private final Graph topGraph;
+            private final Counts counts;
+            private final int[] count;
+
+            public CountTask(int chunk, int from, int to, List<Edge> edges, Graph leftGraph, Graph topGraph, int[] count) {
+                this.chunk = chunk;
+                this.from = from;
+                this.to = to;
+                this.edges = edges;
+                this.leftGraph = leftGraph;
+                this.topGraph = topGraph;
+                this.counts = new Counts();
+                this.count = count;
+            }
+
+            @Override
+            protected Counts compute() {
+                int range = to - from;
+
+                if (range <= chunk) {
+                    for (int i = from; i < to; i++) {
+                        int j = ++count[0];
+                        if (j % 1000 == 0) System.out.println("Counted " + (count[0]));
+
+                        Edge edge = edges.get(i);
+
+                        Node x = edge.getNode1();
+                        Node y = edge.getNode2();
+
+                        Edge left = leftGraph.getEdge(x, y);
+                        Edge top = topGraph.getEdge(x, y);
+
+                        int m = getTypeLeft(left, top);
+                        int n = getTypeTop(top);
+
+                        counts.increment(m, n);
+                    }
+
+                    return counts;
+                } else {
+                    int mid = (to + from) / 2;
+                    CountTask left = new CountTask(chunk, from, mid, edges, leftGraph, topGraph, count);
+                    CountTask right = new CountTask(chunk, mid, to, edges, leftGraph, topGraph, count);
+
+                    left.fork();
+                    Counts rightAnswer = right.compute();
+                    Counts leftAnswer = left.join();
+
+                    leftAnswer.addAll(rightAnswer);
+                    return leftAnswer;
+                }
+            }
+
+            public Counts getCounts() {
+                return counts;
+            }
+        }
+
+
+//        System.out.println("Forming edge union");
+//        topGraph = GraphUtils.replaceNodes(topGraph, leftGraph.getNodes());
+
+//        int[][] counts = new int[8][6];
+        Set<Edge> edgeSet = new HashSet<>();
+        edgeSet.addAll(topGraph.getEdges());
+        edgeSet.addAll(leftGraph.getEdges());
+
+//        System.out.println("Union formed");
+
+        if (print) {
+            System.out.println("Top graph " + topGraph.getEdges().size());
+            System.out.println("Left graph " + leftGraph.getEdges().size());
+            System.out.println("All edges " + edgeSet.size());
+        }
+
+        List<Edge> edges = new ArrayList<>(edgeSet);
+
+//        System.out.println("Finding pool");
+        ForkJoinPoolInstance pool = ForkJoinPoolInstance.getInstance();
+
+//        System.out.println("Starting count task");
+        CountTask task = new CountTask(500, 0, edges.size(), edges, leftGraph, topGraph, new int[1]);
+        Counts counts = pool.getPool().invoke(task);
+
+//        System.out.println("Finishing count task");
+        return counts.countArray();
+    }
+
+    private static Set<Edge> complement(Set<Edge> edgeSet, Graph topGraph) {
+        Set<Edge> complement = new HashSet<>(edgeSet);
+        complement.removeAll(topGraph.getEdges());
+        return complement;
     }
 
     private static int getTypeTop(Edge edgeTop) {
@@ -3133,8 +3329,50 @@ public final class GraphUtils {
             return 7;
         }
 
+        if (edgeTop == null) {
+            edgeTop = edgeLeft;
+        }
+
+        if (Edges.isUndirectedEdge(edgeLeft)) {
+            return 0;
+        }
+
+        if (Edges.isNondirectedEdge(edgeLeft)) {
+            return 1;
+        }
+
         Node x = edgeLeft.getNode1();
         Node y = edgeLeft.getNode2();
+
+        if (Edges.isPartiallyOrientedEdge(edgeLeft)) {
+            if ((edgeLeft.pointsTowards(x) && edgeTop.pointsTowards(y)) ||
+                    (edgeLeft.pointsTowards(y) && edgeTop.pointsTowards(x))) {
+                return 3;
+            } else {
+                return 2;
+            }
+        }
+
+        if (Edges.isDirectedEdge(edgeLeft)) {
+            if ((edgeLeft.pointsTowards(x) && edgeTop.pointsTowards(y)) ||
+                    (edgeLeft.pointsTowards(y) && edgeTop.pointsTowards(x))) {
+                return 5;
+            } else {
+                return 4;
+            }
+        }
+
+        if (Edges.isBidirectedEdge(edgeLeft)) {
+            return 6;
+        }
+
+        throw new IllegalArgumentException("Unsupported edge type : " + edgeLeft);
+    }
+
+    private static int getTypeLeft2(Edge edgeLeft) {
+        if (edgeLeft == null) {
+            return 7;
+        }
 
         if (Edges.isUndirectedEdge(edgeLeft)) {
             return 0;
@@ -3145,35 +3383,11 @@ public final class GraphUtils {
         }
 
         if (Edges.isPartiallyOrientedEdge(edgeLeft)) {
-            if ((edgeLeft.pointsTowards(x) && edgeTop.pointsTowards(y)) ||
-                    edgeLeft.pointsTowards(y) && edgeTop.pointsTowards(x)) {
-                return 3;
-            } else {
-                return 2;
-            }
-
-//            if (edgeTop.equals(edgeLeft.reverse())) {
-//                return 3;
-//            }
-//            else {
-//                return 2;
-//            }
+            return 2;
         }
 
         if (Edges.isDirectedEdge(edgeLeft)) {
-            if ((edgeLeft.pointsTowards(x) && edgeTop.pointsTowards(y)) ||
-                    edgeLeft.pointsTowards(y) && edgeTop.pointsTowards(x)) {
-                return 5;
-            } else {
-                return 4;
-            }
-
-//            if (edgeTop.equals(edgeLeft.reverse())) {
-//                return 5;
-//            }
-//            else {
-//                return 4;
-//            }
+            return 4;
         }
 
         if (Edges.isBidirectedEdge(edgeLeft)) {
@@ -3182,6 +3396,7 @@ public final class GraphUtils {
 
         throw new IllegalArgumentException("Unsupported edge type : " + edgeLeft);
     }
+
 
     public static Set<Set<Node>> maximalCliques(Graph graph, List<Node> nodes) {
         Set<Set<Node>> report = new HashSet<>();
@@ -3294,131 +3509,139 @@ public final class GraphUtils {
         return buf.toString();
     }
 
-    public static class GraphComparison {
-        private int adjFn;
-        private int adjFp;
-        private int adjCorrect;
-        private int arrowptFn;
-        private int arrowptFp;
-        private int arrowptCorrect;
+public static class GraphComparison {
+    private final int[][] counts;
+    private int adjFn;
+    private int adjFp;
+    private int adjCorrect;
+    private int arrowptFn;
+    private int arrowptFp;
+    private int arrowptCorrect;
 
-        private double adjPrec;
-        private double adjRec;
-        private double arrowptPrec;
-        private double arrowptRec;
+    private double adjPrec;
+    private double adjRec;
+    private double arrowptPrec;
+    private double arrowptRec;
 
-        private int shd;
-        private int twoCycleFn;
-        private int twoCycleFp;
-        private int twoCycleCorrect;
+    private int shd;
+    private int twoCycleFn;
+    private int twoCycleFp;
+    private int twoCycleCorrect;
 
-        private List<Edge> edgesAdded;
-        private List<Edge> edgesRemoved;
-        private List<Edge> edgesReorientedFrom;
-        private List<Edge> edgesReorientedTo;
+    private List<Edge> edgesAdded;
+    private List<Edge> edgesRemoved;
+    private List<Edge> edgesReorientedFrom;
+    private List<Edge> edgesReorientedTo;
 
-        public GraphComparison(int adjFn, int adjFp, int adjCorrect,
-                               int arrowptFn, int arrowptFp, int arrowptCorrect,
-                               double adjPrec, double adjRec, double arrowptPrec, double arrowptRec,
-                               int shd,
-                               int twoCycleCorrect, int twoCycleFn, int twoCycleFp,
-                               List<Edge> edgesAdded, List<Edge> edgesRemoved,
-                               List<Edge> edgesReorientedFrom,
-                               List<Edge> edgesReorientedTo) {
-            this.adjFn = adjFn;
-            this.adjFp = adjFp;
-            this.adjCorrect = adjCorrect;
-            this.arrowptFn = arrowptFn;
-            this.arrowptFp = arrowptFp;
-            this.arrowptCorrect = arrowptCorrect;
+    public GraphComparison(int adjFn, int adjFp, int adjCorrect,
+                           int arrowptFn, int arrowptFp, int arrowptCorrect,
+                           double adjPrec, double adjRec, double arrowptPrec, double arrowptRec,
+                           int shd,
+                           int twoCycleCorrect, int twoCycleFn, int twoCycleFp,
+                           List<Edge> edgesAdded, List<Edge> edgesRemoved,
+                           List<Edge> edgesReorientedFrom,
+                           List<Edge> edgesReorientedTo,
+                           int[][] counts) {
+        this.adjFn = adjFn;
+        this.adjFp = adjFp;
+        this.adjCorrect = adjCorrect;
+        this.arrowptFn = arrowptFn;
+        this.arrowptFp = arrowptFp;
+        this.arrowptCorrect = arrowptCorrect;
 
-            this.adjPrec = adjPrec;
-            this.adjRec = adjRec;
-            this.arrowptPrec = arrowptPrec;
-            this.arrowptRec = arrowptRec;
+        this.adjPrec = adjPrec;
+        this.adjRec = adjRec;
+        this.arrowptPrec = arrowptPrec;
+        this.arrowptRec = arrowptRec;
 
-            this.shd = shd;
-            this.twoCycleCorrect = twoCycleCorrect;
-            this.twoCycleFn = twoCycleFn;
-            this.twoCycleFp = twoCycleFp;
-            this.edgesAdded = edgesAdded;
-            this.edgesRemoved = edgesRemoved;
-            this.edgesReorientedFrom = edgesReorientedFrom;
-            this.edgesReorientedTo = edgesReorientedTo;
-        }
+        this.shd = shd;
+        this.twoCycleCorrect = twoCycleCorrect;
+        this.twoCycleFn = twoCycleFn;
+        this.twoCycleFp = twoCycleFp;
+        this.edgesAdded = edgesAdded;
+        this.edgesRemoved = edgesRemoved;
+        this.edgesReorientedFrom = edgesReorientedFrom;
+        this.edgesReorientedTo = edgesReorientedTo;
 
-        public int getAdjFn() {
-            return adjFn;
-        }
-
-        public int getAdjFp() {
-            return adjFp;
-        }
-
-        public int getAdjCorrect() {
-            return adjCorrect;
-        }
-
-        public int getArrowptFn() {
-            return arrowptFn;
-        }
-
-        public int getArrowptFp() {
-            return arrowptFp;
-        }
-
-        public int getArrowptCorrect() {
-            return arrowptCorrect;
-        }
-
-        public int getShd() {
-            return shd;
-        }
-
-        public int getTwoCycleFn() {
-            return twoCycleFn;
-        }
-
-        public int getTwoCycleFp() {
-            return twoCycleFp;
-        }
-
-        public int getTwoCycleCorrect() {
-            return twoCycleCorrect;
-        }
-
-        public List<Edge> getEdgesAdded() {
-            return edgesAdded;
-        }
-
-        public List<Edge> getEdgesRemoved() {
-            return edgesRemoved;
-        }
-
-        public List<Edge> getEdgesReorientedFrom() {
-            return edgesReorientedFrom;
-        }
-
-        public List<Edge> getEdgesReorientedTo() {
-            return edgesReorientedTo;
-        }
-
-        public double getAdjPrec() {
-            return adjPrec;
-        }
-
-        public double getAdjRec() {
-            return adjRec;
-        }
-
-        public double getArrowptPrec() {
-            return arrowptPrec;
-        }
-
-        public double getArrowptRec() {
-            return arrowptRec;
-        }
+        this.counts = counts;
     }
+
+    public int getAdjFn() {
+        return adjFn;
+    }
+
+    public int getAdjFp() {
+        return adjFp;
+    }
+
+    public int getAdjCor() {
+        return adjCorrect;
+    }
+
+    public int getAhdFn() {
+        return arrowptFn;
+    }
+
+    public int getAhdFp() {
+        return arrowptFp;
+    }
+
+    public int getAhdCor() {
+        return arrowptCorrect;
+    }
+
+    public int getShd() {
+        return shd;
+    }
+
+    public int getTwoCycleFn() {
+        return twoCycleFn;
+    }
+
+    public int getTwoCycleFp() {
+        return twoCycleFp;
+    }
+
+    public int getTwoCycleCorrect() {
+        return twoCycleCorrect;
+    }
+
+    public List<Edge> getEdgesAdded() {
+        return edgesAdded;
+    }
+
+    public List<Edge> getEdgesRemoved() {
+        return edgesRemoved;
+    }
+
+    public List<Edge> getEdgesReorientedFrom() {
+        return edgesReorientedFrom;
+    }
+
+    public List<Edge> getEdgesReorientedTo() {
+        return edgesReorientedTo;
+    }
+
+    public double getAdjPrec() {
+        return adjPrec;
+    }
+
+    public double getAdjRec() {
+        return adjRec;
+    }
+
+    public double getAhdPrec() {
+        return arrowptPrec;
+    }
+
+    public double getAhdRec() {
+        return arrowptRec;
+    }
+
+    public int[][] getCounts() {
+        return counts;
+    }
+}
 
     public static TwoCycleErrors getTwoCycleErrors(Graph trueGraph, Graph estGraph) {
         Set<Edge> trueEdges = trueGraph.getEdges();
@@ -3480,25 +3703,26 @@ public final class GraphUtils {
         return twoCycleErrors;
     }
 
-    public static class TwoCycleErrors {
-        public int twoCycCor = 0;
-        public int twoCycFn = 0;
-        public int twoCycFp = 0;
+public static class TwoCycleErrors {
+    public int twoCycCor = 0;
+    public int twoCycFn = 0;
+    public int twoCycFp = 0;
 
-        public TwoCycleErrors(int twoCycCor, int twoCycFn, int twoCycFp) {
-            this.twoCycCor = twoCycCor;
-            this.twoCycFn = twoCycFn;
-            this.twoCycFp = twoCycFp;
-        }
-
-        public String toString() {
-            String buf = "2c cor = " + twoCycCor + "\t" +
-                    "2c fn = " + twoCycFn + "\t" +
-                    "2c fp = " + twoCycFp;
-
-            return buf;
-        }
+    public TwoCycleErrors(int twoCycCor, int twoCycFn, int twoCycFp) {
+        this.twoCycCor = twoCycCor;
+        this.twoCycFn = twoCycFn;
+        this.twoCycFp = twoCycFp;
     }
+
+    public String toString() {
+        String buf = "2c cor = " + twoCycCor + "\t" +
+                "2c fn = " + twoCycFn + "\t" +
+                "2c fp = " + twoCycFp;
+
+        return buf;
+    }
+
+}
 
 
     public static boolean isDConnectedTo(Node x, Node y, List<Node> z, Graph graph) {
@@ -3609,6 +3833,65 @@ public final class GraphUtils {
         return false;
     }
 
+    public static Set<Node> getDconnectedVars(Node x, List<Node> z, Graph graph) {
+        Set<Node> Y = new HashSet<>();
+
+        class EdgeNode {
+            private Edge edge;
+            private Node node;
+
+            public EdgeNode(Edge edge, Node node) {
+                this.edge = edge;
+                this.node = node;
+            }
+
+            public int hashCode() {
+                return edge.hashCode() + node.hashCode();
+            }
+
+            public boolean equals(Object o) {
+                if (!(o instanceof EdgeNode)) throw new IllegalArgumentException();
+                EdgeNode _o = (EdgeNode) o;
+                return _o.edge == edge && _o.node == node;
+            }
+        }
+
+        Queue<EdgeNode> Q = new ArrayDeque<>();
+        Set<EdgeNode> V = new HashSet<>();
+
+        for (Edge edge : graph.getEdges(x)) {
+            EdgeNode edgeNode = new EdgeNode(edge, x);
+            Q.offer(edgeNode);
+            V.add(edgeNode);
+            Y.add(edge.getDistalNode(x));
+        }
+
+        while (!Q.isEmpty()) {
+            EdgeNode t = Q.poll();
+
+            Edge edge1 = t.edge;
+            Node a = t.node;
+            Node b = edge1.getDistalNode(a);
+
+            for (Edge edge2 : graph.getEdges(b)) {
+                Node c = edge2.getDistalNode(b);
+                if (c == a) continue;
+
+                if (reachable(edge1, edge2, a, z, graph)) {
+                    EdgeNode u = new EdgeNode(edge2, b);
+
+                    if (!V.contains(u)) {
+                        V.add(u);
+                        Q.offer(u);
+                        Y.add(c);
+                    }
+                }
+            }
+        }
+
+        return Y;
+    }
+
     // Depth first.
     public static boolean isDConnectedTo2(Node x, Node y, List<Node> z, Graph graph) {
         LinkedList<Node> path = new LinkedList<Node>();
@@ -3702,7 +3985,6 @@ public final class GraphUtils {
 
         return R;
     }
-
 
     // Finds a sepset for x and y, if there is one; otherwise, returns null.
     public static List<Node> getSepset(Node x, Node y, Graph graph) {
@@ -3845,8 +4127,8 @@ public final class GraphUtils {
         }
 
 
-        boolean ancestor = zAncestors(z, graph).contains(b);
-        boolean ancestor2 = isAncestor(b, z, graph);
+//        boolean ancestor = zAncestors(z, graph).contains(b);
+        boolean ancestor = isAncestor(b, z, graph);
 
 //        if (ancestor != ancestor2) {
 //            System.out.println("Ancestors of " + z + " are " + zAncestors(z, graph));
@@ -3875,13 +4157,37 @@ public final class GraphUtils {
     }
 
     private static boolean isAncestor(Node b, List<Node> z, Graph graph) {
-        for (Node n : z) {
-            if (graph.isAncestorOf(b, n)) {
-                return true;
+//        for (Node n : z) {
+//            if (graph.isAncestorOf(b, n)) {
+//                return true;
+//            }
+//        }
+//
+//        return false;
+        if (z.contains(b)) return true;
+
+        Queue<Node> Q = new ArrayDeque<>();
+        Set<Node> V = new HashSet<>();
+
+        for (Node node : z) {
+            Q.offer(node);
+            V.add(node);
+        }
+
+        while (!Q.isEmpty()) {
+            Node t = Q.poll();
+            if (t == b) return true;
+
+            for (Node c : graph.getParents(t)) {
+                if (!V.contains(c)) {
+                    Q.offer(c);
+                    V.add(c);
+                }
             }
         }
 
         return false;
+
     }
 
     private static List<Node> getPassNodes(Node a, Node b, List<Node> z, Graph graph, Set<Triple> colliders) {

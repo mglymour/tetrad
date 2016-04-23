@@ -96,7 +96,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
     /**
      * The score for discrete searches.
      */
-    private FgsScore fgsScore;
+    private Score fgsScore;
 
     /**
      * The logger for this class. The config needs to be set.
@@ -165,6 +165,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     /**
      * The data set must either be all continuous or all discrete.
+     * @deprecated Construct a Score and pass it in instead.
      */
     public Fgs(DataSet dataSet) {
         if (verbose) {
@@ -172,9 +173,10 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
 
         if (dataSet.isDiscrete()) {
-            setFgsScore(new BDeuScore(dataSet));
+            setScore(new BDeuScore(dataSet));
         } else {
-            setFgsScore(new SemBicScore(new CovarianceMatrixOnTheFly(dataSet), 2.0));
+            SemBicScore fgsScore = new SemBicScore(new CovarianceMatrixOnTheFly(dataSet));
+            setScore(fgsScore);
         }
 
         this.graph = new EdgeListGraphSingleConnections(getVariables());
@@ -186,13 +188,16 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     /**
      * Continuous case--where a covariance matrix is already available.
+     * @deprecated Construct a Score and pass it in instead.
      */
     public Fgs(ICovarianceMatrix covMatrix) {
         if (verbose) {
             out.println("GES constructor");
         }
 
-        setFgsScore(new SemBicScore(covMatrix, 2.0));
+        SemBicScore score = new SemBicScore(covMatrix);
+        score.setPenaltyDiscount(2.0);
+        setScore(score);
 
         this.graph = new EdgeListGraphSingleConnections(getVariables());
 
@@ -201,9 +206,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
     }
 
-    public Fgs(FgsScore fgsScore) {
+    public Fgs(Score fgsScore) {
         if (fgsScore == null) throw new NullPointerException();
-        setFgsScore(fgsScore);
+        setScore(fgsScore);
         this.graph = new EdgeListGraphSingleConnections(getVariables());
     }
 
@@ -230,9 +235,6 @@ public final class Fgs implements GraphSearch, GraphScorer {
      * @return the resulting Pattern.
      */
     public Graph search() {
-        long start = System.currentTimeMillis();
-        score = 0.0;
-
         topGraphs.clear();
 
         lookupArrows = new ConcurrentHashMap<>();
@@ -241,6 +243,8 @@ public final class Fgs implements GraphSearch, GraphScorer {
         if (adjacencies != null) {
             adjacencies = GraphUtils.replaceNodes(adjacencies, nodes);
         }
+
+        addRequiredEdges(graph);
 
         if (initialGraph != null) {
             graph.clear();
@@ -282,6 +286,9 @@ public final class Fgs implements GraphSearch, GraphScorer {
             }
         }
 
+        long start = System.currentTimeMillis();
+        score = 0.0;
+
         // Do backward search.
         bes();
 
@@ -320,6 +327,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     /**
      * For BIC score, a multiplier on the penalty term. For continuous searches.
+     * @deprecated Use the getters on the individual scores instead.
      */
     public double getPenaltyDiscount() {
         if (fgsScore instanceof ISemBicScore) {
@@ -331,6 +339,7 @@ public final class Fgs implements GraphSearch, GraphScorer {
 
     /**
      * For BIC score, a multiplier on the penalty term. For continuous searches.
+     * @deprecated Use the setters on the individual scores instead.
      */
     public void setPenaltyDiscount(double penaltyDiscount) {
         if (fgsScore instanceof ISemBicScore) {
@@ -513,12 +522,12 @@ public final class Fgs implements GraphSearch, GraphScorer {
     //===========================PRIVATE METHODS========================//
 
     //Sets the discrete scoring function to use.
-    private void setFgsScore(FgsScore fgsScore) {
-        this.fgsScore = fgsScore;
+    private void setScore(Score score) {
+        this.fgsScore = score;
 
         this.variables = new ArrayList<>();
 
-        for (Node node : fgsScore.getVariables()) {
+        for (Node node : score.getVariables()) {
             if (node.getNodeType() == NodeType.MEASURED) {
                 this.variables.add(node);
             }
@@ -842,6 +851,8 @@ public final class Fgs implements GraphSearch, GraphScorer {
             storeGraph();
             reevaluateBackward(toProcess);
         }
+
+        meekOrientRestricted(getVariables(), getKnowledge());
     }
 
     private Set<Node> getCommonAdjacents(Node x, Node y) {
@@ -1140,12 +1151,18 @@ public final class Fgs implements GraphSearch, GraphScorer {
         }
     }
 
+    /**
+     * @deprecated Use the setters on the individual scores instead.
+     */
     public void setSamplePrior(double samplePrior) {
         if (fgsScore instanceof LocalDiscreteScore) {
             ((LocalDiscreteScore) fgsScore).setSamplePrior(samplePrior);
         }
     }
 
+    /**
+     * @deprecated Use the setters on the individual scores instead.
+     */
     public void setStructurePrior(double expectedNumParents) {
         if (fgsScore instanceof LocalDiscreteScore) {
             ((LocalDiscreteScore) fgsScore).setStructurePrior(expectedNumParents);
@@ -1606,10 +1623,14 @@ public final class Fgs implements GraphSearch, GraphScorer {
         return null;
     }
 
+    // Runs Meek rules on just the changed adj.
+    private Set<Node> reorientNode(List<Node> nodes) {
+        addRequiredEdges(graph);
+        return meekOrientRestricted(nodes, getKnowledge());
+    }
 
     // Runs Meek rules on just the changed adj.
     private Set<Node> meekOrientRestricted(List<Node> nodes, IKnowledge knowledge) {
-        addRequiredEdges(graph);
         MeekRules rules = new MeekRules();
         rules.setKnowledge(knowledge);
         rules.setUndirectUnforcedEdges(true);

@@ -31,7 +31,7 @@ public class VerticalIntDataBox implements DataBox {
     /**
      * The stored int data.
      */
-    private int[][] data;
+    private final int[][] data;
 
     /**
      * Constructs an 2D int array consisting entirely of missing values
@@ -88,10 +88,16 @@ public class VerticalIntDataBox implements DataBox {
      * The value used is number.intValue().
      */
     public void set(int row, int col, Number value) {
+        int[] ints = data[col];
+
         if (value == null) {
-            data[col][row] = -99;
+            synchronized (ints) {
+                ints[row] = -99;
+            }
         } else {
-            data[col][row] = value.intValue();
+            synchronized (ints) {
+                ints[row] = value.intValue();
+            }
         }
     }
 
@@ -117,15 +123,15 @@ public class VerticalIntDataBox implements DataBox {
      * @return a copy of this data box.
      */
     public DataBox copy() {
-        VerticalIntDataBox box = new VerticalIntDataBox(numRows(), numCols());
+        double[][] copy = new double[numCols()][numRows()];
 
         for (int i = 0; i < numRows(); i++) {
             for (int j = 0; j < numCols(); j++) {
-                box.set(i, j, get(i, j));
+                copy[j][i] = data[j][i];
             }
         }
 
-        return box;
+        return new VerticalDoubleDataBox(copy);
     }
 
     /**

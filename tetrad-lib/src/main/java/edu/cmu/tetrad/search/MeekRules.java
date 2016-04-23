@@ -369,6 +369,10 @@ public class MeekRules implements ImpliedOrientation {
         graph.addEdge(after);
 
         oriented.add(after);
+
+        // Adding last works, checking for c or not. Adding first works, but when it is
+        // checked whether directStack already contains it it seems to produce one in
+        // 3000 trial error for FGS. Do not understand this yet.
         directStack.addLast(c);
     }
 

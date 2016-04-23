@@ -41,12 +41,23 @@ import java.util.List;
  */
 public class IndTestScore implements IndependenceTest {
 
-    private final FgsScore score;
+    private final Score score;
     private final List<Node> variables;
     private final HashMap<Node, Integer> variablesHash;
     private double bump = Double.NaN;
 
-    public IndTestScore(FgsScore score, double parameter1) {
+    public IndTestScore(Score score) {
+        if (score == null) throw new NullPointerException();
+        this.score = score;
+        this.variables = score.getVariables();
+        this.variablesHash = new HashMap<>();
+
+        for (int i = 0; i < variables.size(); i++) {
+            this.variablesHash.put(variables.get(i), i);
+        }
+    }
+
+    public IndTestScore(Score score, double parameter1) {
         if (score == null) throw new NullPointerException();
         this.score = score;
         this.variables = score.getVariables();
